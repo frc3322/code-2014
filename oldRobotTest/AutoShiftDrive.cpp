@@ -9,8 +9,12 @@ AutoShiftDrive::AutoShiftDrive(SpeedController &frontLeftMotor, SpeedController 
 				//leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder)
 {
 }
+
+bool AutoShiftDrive::isInForwardGear() {
+	return shifter.Get() == DoubleSolenoid::kForward;
+}
 void AutoShiftDrive::toggleShiftGear() {
-	shifter.Set(shifter.Get() == DoubleSolenoid::kForward ? DoubleSolenoid::kReverse : DoubleSolenoid::kForward);
+	shifter.Set(isInForwardGear() ? DoubleSolenoid::kReverse : DoubleSolenoid::kForward);
 }
 void AutoShiftDrive::shiftHighGear() {
 	shifter.Set(DoubleSolenoid::kForward);

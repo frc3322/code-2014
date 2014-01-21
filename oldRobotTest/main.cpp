@@ -26,6 +26,8 @@ public:
 	}
 void RobotDemo::RobotInit() {
 	compressor.Start();
+	leftEncoder.Start();
+	rightEncoder.Start();
 }
 void RobotDemo::DisabledInit() {
 }
@@ -39,6 +41,11 @@ void RobotDemo::TeleopInit() {
 }
 void RobotDemo::TeleopPeriodic() {
 	static bool currentY = false, previousY = false;
+	
+	if(stick.GetRawButton(1)) {
+		leftEncoder.Reset();
+		rightEncoder.Reset();
+	}
 	drive.ArcadeDrive(stick,Joystick::kDefaultYAxis,stick,Joystick::kDefaultTwistAxis);
 	//code for toggling high/low gear with ybutton
 	currentY = stick.GetRawButton(YBUTTON);

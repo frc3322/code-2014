@@ -11,11 +11,13 @@ public:
 					SpeedController &frontRightMotor, SpeedController &rearRightMotor,
 					DoubleSolenoid &gearShifter);
 //					Encoder &leftDriveEncoder, Encoder &rightDriveEncoder);
+	bool isInForwardGear();
 	void toggleShiftGear();
 	void shiftHighGear();
 	void shiftHighLow();
 	DoubleSolenoid::Value getShifterValue();
 	void setShifterValue(DoubleSolenoid::Value val);
+	
 };
 
 #endif
