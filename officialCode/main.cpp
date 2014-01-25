@@ -1,13 +1,19 @@
 #include "WPILib.h"
+#include "../xbox.h"
+#include "SmartDashboard/SmartDashboard.h"
+#include "DriveTrain.h"
 
 class Robot : public IterativeRobot
 {
-	RobotDrive drive;
+	Talon leftFront, leftRear, rightFront, rightRear;
+	DoubleSolenoid gearShifter;
+	DriveTrain drive;
 	Joystick stick;
-
 public:
 	Robot():
-		drive(1, 2),
+		leftFront(1), leftRear(2), rightFront(3), rightRear(4),
+		gearShifter(1,2),
+		drive(&leftFront,&leftRear,&rightFront,&rightRear,&gearShifter,NULL,NULL),
 		stick(1)
 	{
 		drive.SetExpiration(0.1);

@@ -162,11 +162,16 @@ IterativeTemplate_partialImage/$(MODE_DIR)/% : LIBPATH =
 IterativeTemplate_partialImage/$(MODE_DIR)/% : LIBS = 
 IterativeTemplate_partialImage/$(MODE_DIR)/% : OBJ_DIR := IterativeTemplate_partialImage/$(MODE_DIR)
 
+IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/DriveTrain.o : $(PRJ_ROOT_DIR)/DriveTrain.cpp $(FORCE_FILE_BUILD)
+	$(TRACE_FLAG)if [ ! -d "`dirname "$@"`" ]; then mkdir -p "`dirname "$@"`"; fi;echo "building $@"; $(TOOL_PATH)ccppc $(DEBUGFLAGS_C++-Compiler) $(CC_ARCH_SPEC) -ansi -Wall  -MD -MP -mlongcall $(ADDED_C++FLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES) -o "$@" -c "$<"
+
+
 IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/main.o : $(PRJ_ROOT_DIR)/main.cpp $(FORCE_FILE_BUILD)
 	$(TRACE_FLAG)if [ ! -d "`dirname "$@"`" ]; then mkdir -p "`dirname "$@"`"; fi;echo "building $@"; $(TOOL_PATH)ccppc $(DEBUGFLAGS_C++-Compiler) $(CC_ARCH_SPEC) -ansi -Wall  -MD -MP -mlongcall $(ADDED_C++FLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES) -o "$@" -c "$<"
 
 
-OBJECTS_IterativeTemplate_partialImage = IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/main.o
+OBJECTS_IterativeTemplate_partialImage = IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/DriveTrain.o \
+	 IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/main.o
 
 IterativeTemplate_partialImage/$(MODE_DIR)/IterativeTemplate_partialImage.o : $(OBJECTS_IterativeTemplate_partialImage)
 	$(TRACE_FLAG)if [ ! -d "`dirname "$@"`" ]; then mkdir -p "`dirname "$@"`"; fi;echo "building $@"; $(TOOL_PATH)ccppc -r -nostdlib -Wl,-X  -o "$@" $(OBJECTS_IterativeTemplate_partialImage) $(LIBPATH) $(LIBS) $(ADDED_LIBPATH) $(ADDED_LIBS)  && if [ "$(EXPAND_DBG)" = "1" ]; then plink "$@";fi
@@ -180,7 +185,7 @@ IterativeTemplate_partialImage/$(MODE_DIR)/IterativeTemplate_partialImage_clean 
 
 force : 
 
-DEP_FILES := IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/main.d
+DEP_FILES := IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/DriveTrain.d IterativeTemplate_partialImage/$(MODE_DIR)/Objects/officialCode/main.d
 -include $(DEP_FILES)
 
 

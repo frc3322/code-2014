@@ -1,14 +1,14 @@
 #include "DriveTrain.h"
 
 DriveTrain::DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLeftMotor,
-				SpeedController *frontRightMotor, SpeedController *rearRightMotor)://,
-				//Encoder &leftDriveEncoder, Encoder &rightDriveEncoder): 
-				RobotDrive(frontLeftMotor,rearLeftMotor,frontRightMotor,rearRightMotor)
-				//shifter(gearShifter)
-				//leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder)
+				SpeedController *frontRightMotor, SpeedController *rearRightMotor,
+				DoubleSolenoid *gearShifter,
+				Encoder *leftDriveEncoder, Encoder *rightDriveEncoder): 
+				RobotDrive(frontLeftMotor,rearLeftMotor,frontRightMotor,rearRightMotor), 
+				shifter(gearShifter)
+				,leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder)
 {
 }
-/*
 bool DriveTrain::isInForwardGear() {
 	return shifter->Get() == DoubleSolenoid::kForward;
 }
@@ -21,10 +21,3 @@ void DriveTrain::shiftHighGear() {
 void DriveTrain::shiftHighLow() {
 	shifter->Set(DoubleSolenoid::kReverse);
 }
-DoubleSolenoid::Value DriveTrain::getShifterValue() {
-	return shifter->Get();
-}
-void DriveTrain::setShifterValue(DoubleSolenoid::Value val) {
-	shifter->Set(val);
-}
-*/

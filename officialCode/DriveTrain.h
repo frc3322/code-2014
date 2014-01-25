@@ -5,18 +5,16 @@
 class DriveTrain : public RobotDrive {
 private:
 	DoubleSolenoid *shifter;
-	//Encoder &leftEncoder, &rightEncoder;
+	Encoder *leftEncoder, *rightEncoder;
 public:
 	DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLeftMotor,
-					SpeedController *frontRightMotor, SpeedController *rearRightMotor);
-//					Encoder &leftDriveEncoder, Encoder &rightDriveEncoder);
+					SpeedController *frontRightMotor, SpeedController *rearRightMotor,
+					DoubleSolenoid *gearShiter,
+					Encoder *leftDriveEncoder, Encoder *rightDriveEncoder);
 	bool isInForwardGear();
 	void toggleShiftGear();
 	void shiftHighGear();
 	void shiftHighLow();
-	DoubleSolenoid::Value getShifterValue();
-	void setShifterValue(DoubleSolenoid::Value val);
-	
 };
 
 #endif
