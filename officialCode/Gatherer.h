@@ -10,4 +10,6 @@ class Gatherer {
 				PIDController *armController);
 		void rollerControl(double rollerSpeed);
 		void setArmAngle(double value);
+		void moveArmForward(double value);
+		void moveArmBackward(double value);
 };

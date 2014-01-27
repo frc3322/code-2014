@@ -31,8 +31,8 @@ public:
 		tech(2),
 		potentiometer(2),
 		arm(&leftArm,&rightArm),
-		armController(0.1,0.001,0.0,&potentiometer,&arm),
-		gatherer(NULL,NULL,&potentiometer,&armController)
+		armController(0.1,0.001,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
+		gatherer(&leftRoller,&rightRoller,&potentiometer,&armController)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
