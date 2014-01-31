@@ -76,6 +76,8 @@ void Robot::TeleopPeriodic() {
 	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm angle", potentiometer.GetValue());
+	drive.baselineShiftPoint = SmartDashboard::GetNumber("baseline shift point");
+	drive.shiftbandWidth = SmartDashboard::GetNumber("shift point band width");
 }
 void Robot::TestInit() {
 }

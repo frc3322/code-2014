@@ -4,7 +4,7 @@
 #include "math.h"
 
 const unsigned int NUM_SPEED_SAMPLES = 4;
-const double BASELINE_SHIFT_POINT = 1500.0;
+//const double BASELINE_SHIFT_POINT = 1500.0;
 class DriveTrain : public RobotDrive {
 private:
 	DoubleSolenoid *shifter;
@@ -13,7 +13,10 @@ private:
 	unsigned int sampleIndex;
 	double shiftPoint;
 	bool autoShiftEnabled;
+	//RobotDrive
 public:
+	double baselineShiftPoint;
+	double shiftbandWidth;
 	DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLeftMotor,
 					SpeedController *frontRightMotor, SpeedController *rearRightMotor,
 					DoubleSolenoid *gearShiter,
@@ -27,6 +30,7 @@ public:
 	bool isAutoShiftEnabled();
 	void takeSpeedSample();
 	void shiftAutomaically();
+	bool isTurning();
 };
 
 #endif

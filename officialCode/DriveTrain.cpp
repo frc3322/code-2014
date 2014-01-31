@@ -7,29 +7,30 @@ DriveTrain::DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLef
 				RobotDrive(frontLeftMotor,rearLeftMotor,frontRightMotor,rearRightMotor), 
 				shifter(gearShifter)
 				,leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder),
-				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true)
+				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true),
+				baselineShiftPoint(1500.0),shiftbandWidth(15.0)
 {
 	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
 		speedHistory[i] = 0;
 }
 bool DriveTrain::isInHighGear() {
-	return shifter->Get() == DoubleSolenoid::kForward;
+	return shifter->Get() == DoubleSolenoid::kReverse;
 }
 void DriveTrain::toggleShiftGear() {
-	shifter->Set(isInHighGear() ? DoubleSolenoid::kReverse : DoubleSolenoid::kForward);
+	shifter->Set(isInHighGear() ? DoubleSolenoid::kForward : DoubleSolenoid::kReverse);
 }
 void DriveTrain::shiftHighGear() {
-	shifter->Set(DoubleSolenoid::kForward);
-}
-void DriveTrain::shiftLowGear() {
 	shifter->Set(DoubleSolenoid::kReverse);
 }
+void DriveTrain::shiftLowGear() {
+	shifter->Set(DoubleSolenoid::kForward);
+}
 void DriveTrain::toogleAutoShiftEnable() {
-	shiftPoint = BASELINE_SHIFT_POINT;
+	shiftPoint = baselineShiftPoint;
 	autoShiftEnabled = !autoShiftEnabled;
 }
 void DriveTrain::setAutoShiftEnable(bool value) {
-	shiftPoint = BASELINE_SHIFT_POINT;
+	shiftPoint = baselineShiftPoint;
 	autoShiftEnabled = value;
 }
 bool DriveTrain::isAutoShiftEnabled() {
@@ -48,11 +49,17 @@ void DriveTrain::shiftAutomaically() {
 	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
 		avg += speedHistory[i];
 	avg /= ((double)NUM_SPEED_SAMPLES);
-	if(fabs(avg) > shiftPoint) {
-		shiftPoint = BASELINE_SHIFT_POINT - 8.0;
+	if(isTurning()) {
+		//do nothing
+	} else if(fabs(avg) > shiftPoint + shiftbandWidth) {
+		shiftPoint = baselineShiftPoint;// - 8.0;
 		shiftHighGear();
-	} else/* if(fabs(avg) < shiftPoint - 5.0){*/{
-		shiftPoint = BASELINE_SHIFT_POINT;
+	} else if(fabs(avg) < shiftPoint - shiftbandWidth){
+		shiftPoint = baselineShiftPoint;
 		shiftLowGear();		
 	}
+}
+bool DriveTrain::isTurning() {
+	//if encoders have opposite signs and
+	return leftEncoder->GetRate() * rightEncoder->GetRate() < 0 ;
 }
