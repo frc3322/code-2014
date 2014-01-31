@@ -10,6 +10,6 @@ class Gatherer {
 				PIDController *armController);
 		void rollerControl(double rollerSpeed);
 		void setArmAngle(double value);
-		void moveArmForward(double value);
-		void moveArmBackward(double value);
+		void moveArmForward(double increment);
+		void moveArmBackward(double increment);	//redundent?? could just pass negatives to moveArm
 };
