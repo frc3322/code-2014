@@ -42,6 +42,10 @@ void Robot::RobotInit() {
 	compressor.Start();
 	leftEncoder.Start();
 	rightEncoder.Start();
+	SmartDashboard::init();
+	//have to put numbers before you can get them
+	SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
+	SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
 }
 void Robot::DisabledInit() {
 }
