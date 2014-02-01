@@ -18,9 +18,12 @@ public:
 	double baselineShiftPoint;
 	double shiftbandWidth;
 	DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLeftMotor,
-					SpeedController *frontRightMotor, SpeedController *rearRightMotor,
-					DoubleSolenoid *gearShiter,
-					Encoder *leftDriveEncoder, Encoder *rightDriveEncoder);
+			SpeedController *frontRightMotor, SpeedController *rearRightMotor,
+			DoubleSolenoid *gearShiter,
+			Encoder *leftDriveEncoder, Encoder *rightDriveEncoder);
+	DriveTrain(SpeedController *left, SpeedController *right,
+			DoubleSolenoid *gearShiter,
+			Encoder *leftDriveEncoder, Encoder *rightDriveEncoder);
 	bool isInHighGear();
 	void toggleShiftGear();
 	void shiftHighGear();

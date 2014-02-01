@@ -13,6 +13,18 @@ DriveTrain::DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLef
 	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
 		speedHistory[i] = 0;
 }
+DriveTrain::DriveTrain(SpeedController *left, SpeedController *right,
+				DoubleSolenoid *gearShifter,
+				Encoder *leftDriveEncoder, Encoder *rightDriveEncoder): 
+				RobotDrive(left,right), 
+				shifter(gearShifter),
+				leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder),
+				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true),
+				baselineShiftPoint(1500.0),shiftbandWidth(15.0)
+{
+	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
+		speedHistory[i] = 0;
+}
 bool DriveTrain::isInHighGear() {
 	return shifter->Get() == DoubleSolenoid::kReverse;
 }
