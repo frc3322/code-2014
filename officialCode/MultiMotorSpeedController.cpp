@@ -21,3 +21,6 @@ void MultiMotorSpeedController::Disable() {
 	for(unsigned int i = 0; i < number; i++)
 		controllers[i]->Disable();
 }
+void MultiMotorSpeedController::PIDWrite(float value) {
+	Set(value);
+}

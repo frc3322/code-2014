@@ -4,6 +4,7 @@
 #include "DriveTrain.h"
 #include "Gatherer.h"
 #include "GathererArm.h"
+#include "MultiMotorSpeedController.h"
 
 class Robot : public IterativeRobot
 {

@@ -12,5 +12,6 @@ public:
 	virtual float Get();	//returns avg
 	float Get(unsigned int index);	//returns value for a certain controller or nan if invalid index
 	virtual void Disable();
+	virtual void PIDWrite(float value);
 };
 #endif
