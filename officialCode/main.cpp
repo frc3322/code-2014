@@ -5,10 +5,10 @@
 #include "Gatherer.h"
 #include "GathererArm.h"
 #include "TripleSpeedController.h"
+#include "Shooter.h"
 
 class Robot : public IterativeRobot
 {
-	//Talon leftFront, leftRear, rightFront, rightRear;
 	Talon left1, left2, left3, right1, right2, right3;
 	Talon leftArm, rightArm, leftRoller, rightRoller;
 	DoubleSolenoid gearShifter;
@@ -24,7 +24,6 @@ class Robot : public IterativeRobot
 	Gatherer gatherer;
 public:
 	Robot():
-		//leftFront(1), leftRear(2), rightFront(3), rightRear(4),
 		left1(1), left2(2), left3(20), right1(3), right2(4), right3(20),
 		leftArm(20), rightArm(20), leftRoller(20), rightRoller(20),
 		gearShifter(1,2),
