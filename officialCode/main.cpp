@@ -22,6 +22,7 @@ class Robot : public IterativeRobot
 	GathererArm arm;
 	PIDController armController;
 	Gatherer gatherer;
+	double deadbandWidth;
 public:
 	Robot():
 		left1(1), left2(2), left3(20), right1(3), right2(4), right3(20),
@@ -36,7 +37,8 @@ public:
 		potentiometer(2),
 		arm(&leftArm,&rightArm),
 		armController(0.1,0.001,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
-		gatherer(&leftRoller,&rightRoller,&potentiometer,&armController)
+		gatherer(&leftRoller,&rightRoller,&potentiometer,&armController),
+		deadbandWidth(0.01)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -49,6 +51,7 @@ void Robot::RobotInit() {
 	//have to put numbers before you can get them
 	SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
 	SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
+	SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
 }
 void Robot::DisabledInit() {
 }
@@ -73,7 +76,12 @@ void Robot::TeleopPeriodic() {
 	previousB = currentB;
 	drive.takeSpeedSample();
 	drive.shiftAutomaically();
-	drive.ArcadeDrive(stick,Joystick::kDefaultYAxis,stick,Joystick::kDefaultTwistAxis);
+	float moveValue = stick.GetAxis(Joystick::kYAxis);
+	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
+	//deadband for joystick
+	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
+	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
+	drive.ArcadeDrive(moveValue,rotateValue);
 	//code for toggling high/low gear with ybutton
 	currentY = stick.GetRawButton(YBUTTON);
 	if(currentY && !previousY)
@@ -86,6 +94,9 @@ void Robot::TeleopPeriodic() {
 	SmartDashboard::PutNumber("Arm angle", potentiometer.GetValue());
 	drive.baselineShiftPoint = SmartDashboard::GetNumber("baseline shift point");
 	drive.shiftbandWidth = SmartDashboard::GetNumber("shift point band width");
+	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
+	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
+	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
 }
 void Robot::TestInit() {
 }
