@@ -3,14 +3,13 @@
 #include "SmartDashboard/SmartDashboard.h"
 #include "DriveTrain.h"
 #include "Gatherer.h"
-#include "GathererArm.h"
 #include "TripleSpeedController.h"
 #include "Shooter.h"
 
 class Robot : public IterativeRobot
 {
 	Talon left1, left2, left3, right1, right2, right3;
-	Talon leftArm, rightArm, leftRoller, rightRoller;
+	Talon arm, roller;
 	DoubleSolenoid gearShifter;
 	Compressor compressor;
 	Encoder leftEncoder, rightEncoder;
@@ -19,14 +18,13 @@ class Robot : public IterativeRobot
 	Joystick stick;
 	Joystick tech;
 	AnalogChannel potentiometer;
-	GathererArm arm;
 	PIDController armController;
 	Gatherer gatherer;
 	double deadbandWidth;
 public:
 	Robot():
 		left1(1), left2(2), left3(20), right1(3), right2(4), right3(20),
-		leftArm(20), rightArm(20), leftRoller(20), rightRoller(20),
+		arm(20), roller(20),
 		gearShifter(1,2),
 		compressor(5,1),
 		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,true, Encoder::k4X),
@@ -35,9 +33,8 @@ public:
 		stick(1),
 		tech(2),
 		potentiometer(2),
-		arm(&leftArm,&rightArm),
-		armController(0.1,0.001,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
-		gatherer(&leftRoller,&rightRoller,&potentiometer,&armController),
+		armController(0.1,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
+		gatherer(&roller,&potentiometer,&armController),
 		deadbandWidth(0.01)
 	{
 		drive.SetExpiration(0.1);
@@ -52,6 +49,7 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
 	SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
 	SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
+	gatherer.init();
 }
 void Robot::DisabledInit() {
 }
