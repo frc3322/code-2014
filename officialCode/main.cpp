@@ -6,11 +6,13 @@
 #include "TripleSpeedController.h"
 #include "Shooter.h"
 
+
 class Robot : public IterativeRobot
 {
 	Talon left1, left2, left3, right1, right2, right3;
+	Talon winch;
 	Talon arm, roller;
-	DoubleSolenoid gearShifter, Trigger;
+	DoubleSolenoid gearShifter, trigger;
 	Compressor compressor;
 	Encoder leftEncoder, rightEncoder;
 	TripleSpeedController left, right;
@@ -18,27 +20,33 @@ class Robot : public IterativeRobot
 	Joystick stick;
 	Joystick tech;
 	AnalogChannel potentiometer;
+	AnalogChannel shooterPot;
 	PIDController armController;
 	Gatherer gatherer;
+	Shooter shooter;
 	double deadbandWidth;
 	double Gather_angle;
 	double P, I, D;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
+		winch(7),
 		arm(9), roller(8),
 		gearShifter(1,2),
-		Trigger(3,4),
+		trigger(3,4),
 		compressor(5,1),
-		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,true, Encoder::k4X),
+		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
 		stick(1),
 		tech(2),
 		potentiometer(2),
+		shooterPot(3),
 		armController(-1.0,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
 		gatherer(&roller,&potentiometer,&armController),
+		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),P(-0.4), I(-0.01), D(0.0)
+		
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -49,8 +57,9 @@ void Robot::RobotInit() {
 	rightEncoder.Start();
 	SmartDashboard::init();
 	//have to put numbers before you can get them
-	SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
-	SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
+	SmartDashboard::PutNumber("Low to high gear shift point", drive.lowHighShiftPoint);
+	SmartDashboard::PutNumber("High to low gear shift point", drive.highLowShiftPoint);
+	SmartDashboard::PutNumber("Time before shifting to High", drive.timeShiftHigh);
 	SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
 	SmartDashboard::PutNumber("P",P);
 	SmartDashboard::PutNumber("I",I);
@@ -63,8 +72,10 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
-	drive.baselineShiftPoint = SmartDashboard::GetNumber("baseline shift point");
-	drive.shiftbandWidth = SmartDashboard::GetNumber("shift point band width");
+	drive.lowHighShiftPoint = SmartDashboard::GetNumber("Low to high gear shift point");
+	drive.highLowShiftPoint = SmartDashboard::GetNumber("High to low gear shift point");
+	drive.timeShiftHigh = SmartDashboard::GetNumber("Time before shifting to High");
+	drive.timeShiftLow = SmartDashboard::GetNumber("Time before shifting to Low");
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
 	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
 	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
@@ -97,8 +108,10 @@ void Robot::TeleopPeriodic() {
 	}
 	//toggle auto shift enabled
 	currentB = stick.GetRawButton(BBUTTON);
-	if(currentB && !previousB)
-		drive.toogleAutoShiftEnable();
+	if(currentB && !previousB){
+		//drive.toogleAutoShiftEnable();
+		shooter.retractTrigger();
+	}
 	previousB = currentB;
 	drive.takeSpeedSample();
 	drive.shiftAutomaically();
@@ -118,7 +131,8 @@ void Robot::TeleopPeriodic() {
 		gatherer.rollerControl(0);
 	currentX = stick.GetRawButton(XBUTTON);
 	if(currentX && !previousX)
-		gatherer.togglePIDEnabled();
+		shooter.fireTrigger();
+//		gatherer.togglePIDEnabled();
 	//gatherer.moveArmForward(stick.GetAxis(Joystick::kThrottleAxis)*0.1);
 	if(gatherer.isPIDEnabled()) {
 		if(stick.GetRawButton(ABUTTON))
@@ -131,6 +145,21 @@ void Robot::TeleopPeriodic() {
 	previousX = currentX;
 	previousY = currentY;
 	PrintInfoToSmartDashboard();
+
+	if(stick.GetRawButton(LBUMPER))
+		shooter.runWinch();
+	else
+		shooter.stopWinch();
+
+	static bool currentBack = false, previousBack = false;
+
+	//bool isRetracted = true;
+//	
+	currentBack = stick.GetRawButton(BACK);
+	if(currentBack && !previousBack) {
+		shooter.fireTrigger();
+	}
+	previousBack = currentBack;	
 }
 void Robot::TestInit() {
 }

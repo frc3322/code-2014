@@ -1,4 +1,27 @@
 #include "Shooter.h"
-Shooter::Shooter(SpeedController* winch, AnalogChannel* pot):
-winch(winch), potentiometer(pot)
-{}
+#include "WPILib.h"
+
+
+Shooter::Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger):
+winch(winch), shooterPot(shooterPot), trigger(trigger)
+{
+	trigger->Set(DoubleSolenoid::kReverse);
+}
+
+void Shooter::runWinch() {
+	winch->Set(-1);
+}
+
+void Shooter::stopWinch() {
+	winch->Set(0);
+}
+
+void Shooter:: fireTrigger() {
+
+		trigger->Set(DoubleSolenoid::kForward);
+}
+
+void Shooter:: retractTrigger() {
+	trigger->Set(DoubleSolenoid::kReverse);
+
+}
