@@ -29,6 +29,7 @@ class Robot : public IterativeRobot
 	double deadbandWidth;
 	double Gather_angle;
 	double P, I, D;
+	unsigned int autonMode;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -47,8 +48,8 @@ public:
 		armController(-1.0,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
 		gatherer(&roller,&potentiometer,&armController),
 		shooter(&winch, &shooterPot, &trigger),
-		deadbandWidth(0.01),P(-0.4), I(-0.01), D(0.0)
-		
+		deadbandWidth(0.01),P(-0.4), I(-0.01), D(0.0),
+		autonMode(0)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -70,6 +71,19 @@ void Robot::RobotInit() {
 	gatherer.init();
 	SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
 	SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
+	SmartDashboard::PutNumber("auton mode", autonMode);
+	char label[3];
+	label[0] = '0';
+	label[1] = ')';
+	label[2] = '\0';
+	const char* descriptions[] = {
+			"drive forward 15ft",
+			"do nothing????"
+	};
+	for(unsigned int i = 0; i < sizeof(descriptions)/sizeof(const char*); i++){
+		SmartDashboard::PutString(label,descriptions[i]);
+		label[0] = label[0] < '9' ? label[0] + 1 : '0';
+	}
 }
 void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
@@ -92,6 +106,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.highThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter high threshold")),5.0);
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
+	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -108,9 +123,15 @@ void Robot::AutonomousInit() {
 }
 void Robot::AutonomousPeriodic() {
 	PrintInfoToSmartDashboard();
-	if(leftEncoder.GetDistance() < 15.2 && rightEncoder.GetDistance() < 15.2)
-		drive.TankDrive(-0.7, -0.705);
-	else drive.TankDrive(0.0,0.0);
+	switch (autonMode) {
+	case 0:
+		if(leftEncoder.GetDistance() < 15.2 && rightEncoder.GetDistance() < 15.2)
+			drive.TankDrive(-0.7, -0.705);
+		else drive.TankDrive(0.0,0.0);
+	break;
+	case 1:
+	break;
+	}
 }
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
