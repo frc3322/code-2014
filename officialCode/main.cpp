@@ -68,7 +68,7 @@ void Robot::RobotInit() {
 	gatherer.init();
 }
 void Robot::PrintInfoToSmartDashboard() {
-	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetRate());
+	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetRate());
 	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
@@ -92,11 +92,21 @@ void Robot::DisabledPeriodic() {
 	PrintInfoToSmartDashboard();
 }
 void Robot::AutonomousInit() {
+	leftEncoder.SetDistancePerPulse(1.0/1000.0);
+	rightEncoder.SetDistancePerPulse(1.0/1000.0);
+	leftEncoder.Reset();
+	rightEncoder.Reset();
+	drive.shiftLowGear();
 }
 void Robot::AutonomousPeriodic() {
 	PrintInfoToSmartDashboard();
+	if(leftEncoder.GetDistance() < 15.2 && rightEncoder.GetDistance() < 15.2)
+		drive.TankDrive(-0.7, -0.705);
+	else drive.TankDrive(0.0,0.0);
 }
 void Robot::TeleopInit() {
+	leftEncoder.SetDistancePerPulse(1.0);
+	rightEncoder.SetDistancePerPulse(1.0);
 }
 void Robot::TeleopPeriodic() {
 	static bool currentY = false, previousY = false, currentB = false, previousB = false;
