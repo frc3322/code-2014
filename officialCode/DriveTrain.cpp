@@ -1,18 +1,4 @@
 #include "DriveTrain.h"
-
-DriveTrain::DriveTrain(SpeedController *frontLeftMotor, SpeedController *rearLeftMotor,
-				SpeedController *frontRightMotor, SpeedController *rearRightMotor,
-				DoubleSolenoid *gearShifter,
-				Encoder *leftDriveEncoder, Encoder *rightDriveEncoder): 
-				RobotDrive(frontLeftMotor,rearLeftMotor,frontRightMotor,rearRightMotor), 
-				shifter(gearShifter)
-				,leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder),
-				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true),
-				baselineShiftPoint(1500.0),shiftbandWidth(15.0)
-{
-	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
-		speedHistory[i] = 0;
-}
 DriveTrain::DriveTrain(SpeedController *left, SpeedController *right,
 				DoubleSolenoid *gearShifter,
 				Encoder *leftDriveEncoder, Encoder *rightDriveEncoder): 
@@ -20,10 +6,13 @@ DriveTrain::DriveTrain(SpeedController *left, SpeedController *right,
 				shifter(gearShifter),
 				leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder),
 				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true),
-				baselineShiftPoint(1500.0),shiftbandWidth(15.0)
+				shiftHighPoint(4000.0), shiftLowPoint(3500.0),
+				shiftHighCounter(0),shiftLowCounter(0), shiftCounterThreshold(3)
 {
-	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
-		speedHistory[i] = 0;
+	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++){
+		leftSpeedHistory[i] = 0;
+		rightSpeedHistory[i] = 0;
+	}
 }
 bool DriveTrain::isInHighGear() {
 	return shifter->Get() == DoubleSolenoid::kReverse;
@@ -38,37 +27,39 @@ void DriveTrain::shiftLowGear() {
 	shifter->Set(DoubleSolenoid::kForward);
 }
 void DriveTrain::toogleAutoShiftEnable() {
-	shiftPoint = baselineShiftPoint;
 	autoShiftEnabled = !autoShiftEnabled;
 }
 void DriveTrain::setAutoShiftEnable(bool value) {
-	shiftPoint = baselineShiftPoint;
 	autoShiftEnabled = value;
 }
 bool DriveTrain::isAutoShiftEnabled() {
 	return autoShiftEnabled;
 }
 void DriveTrain::takeSpeedSample() {
-	double left = leftEncoder->GetRate();
-	double right = rightEncoder->GetRate();
-	speedHistory[sampleIndex++] = (fabs(left) > fabs(right)) ? left : right;	//should I use abolute values in the assignment
+	leftSpeedHistory[sampleIndex] = leftEncoder->GetRate();
+	rightSpeedHistory[sampleIndex++] = rightEncoder->GetRate();
 	if(sampleIndex >= NUM_SPEED_SAMPLES) sampleIndex = 0;
 }
-void DriveTrain::shiftAutomaically() {
+void DriveTrain::shiftAutomatically() {
 	if(!autoShiftEnabled)return;
-	//find average speed
-	double avg = 0.0;
-	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++)
-		avg += speedHistory[i];
-	avg /= ((double)NUM_SPEED_SAMPLES);
-	if(isTurning()) {
-		//do nothing
-	} else if(fabs(avg) > shiftPoint + shiftbandWidth) {
-		shiftPoint = baselineShiftPoint;// - 8.0;
-		shiftHighGear();
-	} else if(fabs(avg) < shiftPoint - shiftbandWidth){
-		shiftPoint = baselineShiftPoint;
-		shiftLowGear();		
+	//find average speeds for both left and right encoders
+	double leftAvg = 0.0, rightAvg = 0.0;
+	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++) {
+		leftAvg += leftSpeedHistory[i];
+		rightAvg += rightSpeedHistory[i];
+	}
+	leftAvg /= ((double)NUM_SPEED_SAMPLES);
+	rightAvg /= ((double)NUM_SPEED_SAMPLES);
+	if(fabs(leftAvg + rightAvg)/2.0 > shiftHighPoint){
+		shiftHighCounter++;
+		if(shiftHighCounter > shiftCounterThreshold)shiftHighGear();
+		shiftLowCounter = 0;
+	}else if(fabs(leftAvg + rightAvg)/2.0 < shiftLowPoint) {
+		shiftLowCounter++;
+		if(shiftLowCounter > shiftCounterThreshold)shiftLowGear();
+		shiftHighCounter = 0;
+	}else {
+		shiftHighCounter = shiftLowCounter = 0;
 	}
 }
 bool DriveTrain::isTurning() {

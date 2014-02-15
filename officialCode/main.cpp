@@ -30,7 +30,7 @@ public:
 		gearShifter(1,2),
 		Trigger(3,4),
 		compressor(5,1),
-		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,true, Encoder::k4X),
+		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
 		stick(1),
@@ -49,9 +49,13 @@ void Robot::RobotInit() {
 	rightEncoder.Start();
 	SmartDashboard::init();
 	//have to put numbers before you can get them
-	SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
-	SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
+	//SmartDashboard::PutNumber("baseline shift point", drive.baselineShiftPoint);
+	//SmartDashboard::PutNumber("shift point band width", drive.shiftbandWidth);
 	SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
+	SmartDashboard::PutNumber("shift high point",drive.shiftHighPoint);
+	SmartDashboard::PutNumber("shift low point",drive.shiftLowPoint);
+	SmartDashboard::PutNumber("shift counter threshold",drive.shiftCounterThreshold);
+	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
 	SmartDashboard::PutNumber("P",P);
 	SmartDashboard::PutNumber("I",I);
 	SmartDashboard::PutNumber("D",D);
@@ -63,9 +67,12 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
-	drive.baselineShiftPoint = SmartDashboard::GetNumber("baseline shift point");
-	drive.shiftbandWidth = SmartDashboard::GetNumber("shift point band width");
+	//drive.baselineShiftPoint = SmartDashboard::GetNumber("baseline shift point");
+	//drive.shiftbandWidth = SmartDashboard::GetNumber("shift point band width");
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
+	drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
+	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
+	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));
 	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
 	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
 	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
@@ -101,7 +108,7 @@ void Robot::TeleopPeriodic() {
 		drive.toogleAutoShiftEnable();
 	previousB = currentB;
 	drive.takeSpeedSample();
-	drive.shiftAutomaically();
+	drive.shiftAutomatically();
 	float moveValue = stick.GetAxis(Joystick::kYAxis);
 	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
 	//deadband for joystick
