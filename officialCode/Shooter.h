@@ -7,12 +7,16 @@ class Shooter {
 	SpeedController *winch;
 	AnalogChannel *shooterPot;
 	DoubleSolenoid *trigger;
+	enum {DRAWN_BACK, DRAWING_BACK, SHOOTING} state;
 public:
+	double highThreshold;
+	double lowThreshold;
 	Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger);
 	void runWinch();
 	void stopWinch();
-	void fireTrigger();
-	void retractTrigger();
-
+	void releaseWinch();
+	void engageWinch();
+	void runShooter(bool shootButton);
+	bool isReadyToShoot();
 };
 #endif
