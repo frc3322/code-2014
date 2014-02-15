@@ -5,11 +5,11 @@
 Shooter::Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger):
 winch(winch), shooterPot(shooterPot), trigger(trigger)
 {
-	trigger->Set(DoubleSolenoid::kReverse);
+	trigger->Set(DoubleSolenoid::kForward);
 }
 
 void Shooter::runWinch() {
-	winch->Set(-1);
+	winch->Set(1);
 }
 
 void Shooter::stopWinch() {
