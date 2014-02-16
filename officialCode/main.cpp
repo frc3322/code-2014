@@ -77,8 +77,8 @@ void Robot::RobotInit() {
 	label[1] = ')';
 	label[2] = '\0';
 	const char* descriptions[] = {
-			"drive forward 15ft",
-			"do nothing????"
+			"Drive to low goal",
+			"Drive to low goal and reverse gatherer to feed ball into low goal"
 	};
 	for(unsigned int i = 0; i < sizeof(descriptions)/sizeof(const char*); i++){
 		SmartDashboard::PutString(label,descriptions[i]);
@@ -122,16 +122,26 @@ void Robot::AutonomousInit() {
 	rightEncoder.Reset();
 	drive.shiftLowGear();
 }
+bool Robot::driveForward(double distance, double speed = 0.7) {
+	if(leftEncoder.GetDistance() < distance && rightEncoder.GetDistance() < distance) {
+		drive.TankDrive(-speed, -speed);
+		return false;
+	}
+	drive.TankDrive(0.0,0.0);
+	return true;
+}
 void Robot::AutonomousPeriodic() {
 	PrintInfoToSmartDashboard();
+	static const bool hasReachedDestination = true;
 	switch (autonMode) {
-	case 0:
-		if(leftEncoder.GetDistance() < 15.2 && rightEncoder.GetDistance() < 15.2)
-			drive.TankDrive(-0.7, -0.705);
-		else drive.TankDrive(0.0,0.0);
+	case 0:	//Drive to low goal
+		//driveForward(15.2);
 	break;
-	case 1:
-	break;
+	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
+		//gatherer.setArmAngle(some angle);		//pull back gatherer arm
+		//if(driveForward(15.2) == hasReachedDestination)//drive forward to low goal
+		//	gatherer.rollerControl();		//run rollers to put ball in low goal
+		break;
 	}
 }
 void Robot::TeleopInit() {
