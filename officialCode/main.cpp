@@ -5,7 +5,8 @@
 #include "Gatherer.h"
 #include "TripleSpeedController.h"
 #include "Shooter.h"
-
+#define PRACTICE
+//#define COMP
 double ceiling(double a, double c) {
 	return a > c ? c : a;
 }
@@ -38,7 +39,11 @@ public:
 		gearShifter(1,2),
 		trigger(3,4),
 		compressor(5,1),
+#ifdef PRACTICE
+		leftEncoder(1,2,false, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
+#elif COMP
 		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
+#endif
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
 		stick(1),
@@ -61,6 +66,7 @@ void Robot::RobotInit() {
 	SmartDashboard::init();
 	//have to put numbers before you can get them
 	SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
+	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutNumber("shift high point",drive.shiftHighPoint);
 	SmartDashboard::PutNumber("shift low point",drive.shiftLowPoint);
 	SmartDashboard::PutNumber("shift counter threshold",drive.shiftCounterThreshold);
@@ -72,6 +78,7 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
 	SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 	SmartDashboard::PutNumber("auton mode", autonMode);
+	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
 	char label[3];
 	label[0] = '0';
 	label[1] = ')';
@@ -87,8 +94,8 @@ void Robot::RobotInit() {
 }
 void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
-	SmartDashboard::PutNumber("right encoder",rightEncoder.GetRate());
-	SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
+	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());
+	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
@@ -97,7 +104,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));
 	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
 	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
-	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
+	gatherer.setPIDEnabled(SmartDashboard::GetBoolean("pid gather control enabled"));
 	P = SmartDashboard::GetNumber("P");
 	I = SmartDashboard::GetNumber("I");
 	D = SmartDashboard::GetNumber("D");
@@ -116,18 +123,20 @@ void Robot::DisabledPeriodic() {
 	PrintInfoToSmartDashboard();
 }
 void Robot::AutonomousInit() {
-	leftEncoder.SetDistancePerPulse(1.0/1000.0);
+	leftEncoder.SetDistancePerPulse(1.0/1000.0);	//should tweek these values
 	rightEncoder.SetDistancePerPulse(1.0/1000.0);
 	leftEncoder.Reset();
 	rightEncoder.Reset();
 	drive.shiftLowGear();
 }
 bool Robot::driveForward(double distance, double speed = 0.7) {
-	if(leftEncoder.GetDistance() < distance && rightEncoder.GetDistance() < distance) {
-		drive.TankDrive(-speed, -speed);
+	double leftDistance = leftEncoder.GetDistance();
+	double rightDistance = rightEncoder.GetDistance();
+	if(leftDistance < distance && rightDistance < distance) {
+		drive.ArcadeDrive(-speed,(leftDistance - rightDistance)*0.01);
 		return false;
 	}
-	drive.TankDrive(0.0,0.0);
+	drive.ArcadeDrive(0.0,0.0);
 	return true;
 }
 void Robot::AutonomousPeriodic() {
@@ -135,18 +144,21 @@ void Robot::AutonomousPeriodic() {
 	static const bool hasReachedDestination = true;
 	switch (autonMode) {
 	case 0:	//Drive to low goal
-		//driveForward(15.2);
+		driveForward(15.2);
 	break;
 	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
-		//gatherer.setArmAngle(some angle);		//pull back gatherer arm
-		//if(driveForward(15.2) == hasReachedDestination)//drive forward to low goal
-		//	gatherer.rollerControl();		//run rollers to put ball in low goal
-		break;
+		gatherer.setArmAngle(4500.0);		//pull back gatherer arm
+		if(driveForward(15.2) == hasReachedDestination)//drive forward to low goal
+			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
+	break;
+	case 2:
+	break;
 	}
 }
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
+	gatherer.setPIDEnabled(true);
 }
 void Robot::TeleopPeriodic() {
 	static bool currentB = false, previousB = false;
@@ -164,10 +176,6 @@ void Robot::TeleopPeriodic() {
 	if(stick.GetRawButton(ABUTTON)) {
 		leftEncoder.Reset();
 		rightEncoder.Reset();
-	}
-	//toggle auto shift enabled
-	if(currentBack && !previousBack){
-		drive.toogleAutoShiftEnable();
 	}
 	drive.takeSpeedSample();
 	drive.shiftAutomatically();
