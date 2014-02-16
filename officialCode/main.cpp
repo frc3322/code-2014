@@ -44,7 +44,7 @@ public:
 		stick(1),
 		tech(2),
 		potentiometer(2),
-		shooterPot(3),
+		shooterPot(1),
 		armController(-1.0,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
 		gatherer(&roller,&potentiometer,&armController),
 		shooter(&winch, &shooterPot, &trigger),
@@ -107,6 +107,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
+	SmartDashboard::PutBoolean("Start button pressed?",stick.GetRawButton(START));
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -142,10 +143,13 @@ void Robot::TeleopPeriodic() {
 	static bool currentX = false, previousX = false;
 	static bool currentY = false, previousY = false;
 	static bool currentBack = false, previousBack = false;
+	static bool currentStart = false, previousStart = false;
+	static bool manualShooterControl = true;
 	currentB = stick.GetRawButton(BBUTTON);
 	currentX = stick.GetRawButton(XBUTTON);
 	currentY = stick.GetRawButton(YBUTTON);
-	currentBack = stick.GetRawButton(BACK);	
+	currentBack = stick.GetRawButton(BACK);
+	currentStart = stick.GetRawButton(START);
 	//reset encoder
 	if(stick.GetRawButton(ABUTTON)) {
 		leftEncoder.Reset();
@@ -169,8 +173,11 @@ void Robot::TeleopPeriodic() {
 	//run roller
 	if(stick.GetRawButton(RBUMPER))
 		gatherer.rollerControl(1);
+	else if (stick.GetRawButton(START))
+		gatherer.rollerControl(-1);
 	else
 		gatherer.rollerControl(0);
+	// Start button no longer disables manual shooter control
 	if(gatherer.isPIDEnabled()) {
 		if(stick.GetRawButton(ABUTTON))
 			gatherer.setArmAngle(3.7);
@@ -179,17 +186,23 @@ void Robot::TeleopPeriodic() {
 	} else {
 		arm.Set(stick.GetAxis(Joystick::kThrottleAxis)*0.5);
 	}
-	/*/release winch (shoot)
-	if(currentX)
-		shooter.releaseWinch();
-	else if(currentB)			//engage winch
-		shooter.engageWinch();
-	//run winch
-	if(stick.GetRawButton(LBUMPER))
-		shooter.runWinch();
-	else
-		shooter.stopWinch();*/
-	shooter.runShooter(stick.GetRawButton(LBUMPER));
+	///toggle manual shooter control
+	//if(currentStart && !previousStart)manualShooterControl = !manualShooterControl;
+	if(manualShooterControl) {
+		//release winch (shoot)
+		if(currentX)
+			shooter.releaseWinch();
+		else if(currentB)			//engage winch
+			shooter.engageWinch();
+		//run winch
+		if(stick.GetRawButton(LBUMPER))
+			shooter.runWinch();
+		else
+			shooter.stopWinch();
+	} else {
+		shooter.runShooter(stick.GetRawButton(LBUMPER));
+	}
+	previousStart = currentStart;
 	previousBack = currentBack;	
 	previousX = currentX;
 	previousY = currentY;
