@@ -104,7 +104,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));
 	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
 	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
-	gatherer.setPIDEnabled(SmartDashboard::GetBoolean("pid gather control enabled"));
+//	gatherer.setPIDEnabled(SmartDashboard::GetBoolean("pid gather control enabled"));
 	P = SmartDashboard::GetNumber("P");
 	I = SmartDashboard::GetNumber("I");
 	D = SmartDashboard::GetNumber("D");
@@ -158,7 +158,7 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
-	gatherer.setPIDEnabled(true);
+	//gatherer.setPIDEnabled(true);
 }
 void Robot::TeleopPeriodic() {
 	static bool currentB = false, previousB = false;
