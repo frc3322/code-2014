@@ -5,8 +5,8 @@
 #include "Gatherer.h"
 #include "TripleSpeedController.h"
 #include "Shooter.h"
-#define PRACTICE
-//#define COMP
+#include "constants.h"
+
 double ceiling(double a, double c) {
 	return a > c ? c : a;
 }
@@ -74,11 +74,10 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("P",P);
 	SmartDashboard::PutNumber("I",I);
 	SmartDashboard::PutNumber("D",D);
-	gatherer.init();
 	SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
 	SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 	SmartDashboard::PutNumber("auton mode", autonMode);
-	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
+	//SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
 	char label[3];
 	label[0] = '0';
 	label[1] = ')';
@@ -93,6 +92,7 @@ void Robot::RobotInit() {
 	}
 }
 void Robot::PrintInfoToSmartDashboard() {
+	//static bool pidEnabled = SmartDashboard::GetBoolean("pid gather control enabled");
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());
 	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
@@ -101,10 +101,11 @@ void Robot::PrintInfoToSmartDashboard() {
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
 	drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
 	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
-	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));
-	SmartDashboard::PutNumber("y axis",stick.GetAxis(Joystick::kYAxis));
-	SmartDashboard::PutNumber("t axis",stick.GetAxis(Joystick::kTwistAxis));
-//	gatherer.setPIDEnabled(SmartDashboard::GetBoolean("pid gather control enabled"));
+	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));	//if(pidEnabled)
+/*	if(SmartDashboard::GetBoolean("pid gather control enabled") != pidEnabled){
+		gatherer.setPIDEnabled(!pidEnabled);
+		pidEnabled = !pidEnabled;
+	}*/
 	P = SmartDashboard::GetNumber("P");
 	I = SmartDashboard::GetNumber("I");
 	D = SmartDashboard::GetNumber("D");
@@ -114,7 +115,6 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
-	SmartDashboard::PutBoolean("Start button pressed?",stick.GetRawButton(START));
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -133,7 +133,7 @@ bool Robot::driveForward(double distance, double speed = 0.7) {
 	double leftDistance = leftEncoder.GetDistance();
 	double rightDistance = rightEncoder.GetDistance();
 	if(leftDistance < distance && rightDistance < distance) {
-		drive.ArcadeDrive(-speed,(leftDistance - rightDistance)*0.01);
+		drive.ArcadeDrive(-speed,(leftDistance - rightDistance)*1.0);
 		return false;
 	}
 	drive.ArcadeDrive(0.0,0.0);
@@ -147,7 +147,7 @@ void Robot::AutonomousPeriodic() {
 		driveForward(15.2);
 	break;
 	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
-		gatherer.setArmAngle(4500.0);		//pull back gatherer arm
+		gatherer.setArmAngle(1.9);		//pull back gatherer arm
 		if(driveForward(15.2) == hasReachedDestination)//drive forward to low goal
 			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 	break;
@@ -158,7 +158,6 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
-	//gatherer.setPIDEnabled(true);
 }
 void Robot::TeleopPeriodic() {
 	static bool currentB = false, previousB = false;
@@ -184,6 +183,7 @@ void Robot::TeleopPeriodic() {
 	//deadband for joystick
 	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
 	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
+	//drive code
 	drive.ArcadeDrive(moveValue,rotateValue);
 	//code for toggling high/low gear with ybutton
 	if(currentY && !previousY)
@@ -191,18 +191,17 @@ void Robot::TeleopPeriodic() {
 	//run roller
 	if(stick.GetRawButton(RBUMPER))
 		gatherer.rollerControl(1);
-	else if (stick.GetRawButton(START))
+	else if (stick.GetRawButton(START)) //run roller backward
 		gatherer.rollerControl(-1);
 	else
 		gatherer.rollerControl(0);
-	// Start button no longer disables manual shooter control
-	if(gatherer.isPIDEnabled()) {
+	if(gatherer.isPIDEnabled()) { //PID gatherer control
 		if(stick.GetRawButton(ABUTTON))
 			gatherer.setArmAngle(3.7);
 		else
 			gatherer.setArmAngle(4.3);
 	} else {
-		arm.Set(stick.GetAxis(Joystick::kThrottleAxis)*0.5);
+		arm.Set(stick.GetAxis(Joystick::kThrottleAxis)); //Manual Gatherer control
 	}
 	///toggle manual shooter control
 	//if(currentStart && !previousStart)manualShooterControl = !manualShooterControl;

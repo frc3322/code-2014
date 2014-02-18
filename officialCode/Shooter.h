@@ -2,6 +2,7 @@
 #define SHOOTER_H
 #include "WPILib.h"
 #include "AnalogChannel.h"
+#include "constants.h"
 
 class Shooter {
 	SpeedController *winch;

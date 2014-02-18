@@ -2,6 +2,7 @@
 #define AUTO_SHIFT_DRIVE_H_
 #include "wpilib.h"
 #include "math.h"
+#include "constants.h"
 
 const unsigned int NUM_SPEED_SAMPLES = 25;
 class DriveTrain : public RobotDrive {

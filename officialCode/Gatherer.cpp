@@ -15,17 +15,6 @@ void Gatherer::setArmAngle(double value) {
 	if(pidEnabled)
 		armController->SetSetpoint(value);
 }
-void Gatherer::moveArmForward(double increment) {
-	//get current angle then set arm angle to current angle + increment
-	//armController->SetSetpoint(armController->GetSetpoint() + increment);
-	
-}
-void Gatherer::moveArmBackward(double increment) {
-}
-void Gatherer::init() {
-	//what should default setpoint be???
-	//armController->Enable();
-}
 void Gatherer::setPIDEnabled(bool value) {
 	pidEnabled = value;
 	if(pidEnabled)

@@ -9,7 +9,7 @@ highThreshold(4.0), lowThreshold(1.0)
 	trigger->Set(DoubleSolenoid::kForward);
 }
 void Shooter::runWinch() {
-	winch->Set(1);
+	winch->Set(-1);	//-1 for comp, 1 for practice
 }
 void Shooter::stopWinch() {
 	winch->Set(0);
