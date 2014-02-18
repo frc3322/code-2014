@@ -31,6 +31,7 @@ class Robot : public IterativeRobot
 	double Gather_angle;
 	double P, I, D;
 	unsigned int autonMode;
+	double autonStartTime;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -39,10 +40,10 @@ public:
 		gearShifter(1,2),
 		trigger(3,4),
 		compressor(5,1),
-#ifdef PRACTICE
-		leftEncoder(1,2,false, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
-#elif COMP
+#if ROBOT == COMP
 		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
+#else
+		leftEncoder(1,2,false, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
 #endif
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
@@ -53,7 +54,8 @@ public:
 		armController(-1.0,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
 		gatherer(&roller,&potentiometer,&armController),
 		shooter(&winch, &shooterPot, &trigger),
-		deadbandWidth(0.01),P(-0.4), I(-0.01), D(0.0),
+		deadbandWidth(0.01),
+		P(-0.4), I(-0.01), D(0.0),
 		autonMode(0)
 	{
 		drive.SetExpiration(0.1);
@@ -115,6 +117,8 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
+	SmartDashboard::PutNumber("FPGA time", Timer::GetFPGATimestamp());
+	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -128,11 +132,12 @@ void Robot::AutonomousInit() {
 	leftEncoder.Reset();
 	rightEncoder.Reset();
 	drive.shiftLowGear();
+	autonStartTime = Timer::GetPPCTimestamp();
 }
-bool Robot::driveForward(double distance, double speed = 0.7) {
+bool Robot::driveForward(double distance, double speed, double timeout) {
 	double leftDistance = leftEncoder.GetDistance();
 	double rightDistance = rightEncoder.GetDistance();
-	if(leftDistance < distance && rightDistance < distance) {
+	if(leftDistance < distance && rightDistance < distance && Timer::GetPPCTimestamp() < timeout) {
 		drive.ArcadeDrive(-speed,(leftDistance - rightDistance)*1.0);
 		return false;
 	}
@@ -144,11 +149,11 @@ void Robot::AutonomousPeriodic() {
 	static const bool hasReachedDestination = true;
 	switch (autonMode) {
 	case 0:	//Drive to low goal
-		driveForward(15.2);
+		driveForward(15.2, 0.7, autonStartTime + 5.0);
 	break;
 	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
 		gatherer.setArmAngle(1.9);		//pull back gatherer arm
-		if(driveForward(15.2) == hasReachedDestination)//drive forward to low goal
+		if(driveForward(15.2, 0.7, autonStartTime + 5.0) == hasReachedDestination)//drive forward to low goal
 			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 	break;
 	case 2:

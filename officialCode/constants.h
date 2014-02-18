@@ -1,11 +1,12 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define PRACTICE
-//#define COMP
-#ifdef COMP
+#define PRACTICE 20141
+#define COMP 20142
+#define ROBOT COMP
+#if ROBOT == COMP
 
-#else	//practice
+#else
 
 #endif
 #endif

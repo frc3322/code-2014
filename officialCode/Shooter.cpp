@@ -9,7 +9,11 @@ highThreshold(4.0), lowThreshold(1.0)
 	trigger->Set(DoubleSolenoid::kForward);
 }
 void Shooter::runWinch() {
-	winch->Set(-1);	//-1 for comp, 1 for practice
+#if ROBOT == COMP
+	winch->Set(-1);
+#else	//1 for practice
+	winch->Set(1);
+#endif
 }
 void Shooter::stopWinch() {
 	winch->Set(0);
