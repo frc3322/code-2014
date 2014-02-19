@@ -5,7 +5,8 @@ Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armCon
 		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false)
 {
 	armAngle->SetVoltageForPID(true);
-	armController->SetOutputRange(-1,1);
+	armController->SetOutputRange(-.4,.4);
+	setPIDEnabled(pidEnabled);
 }
 void Gatherer::rollerControl(double rollerSpeed) {
 	roller->Set(rollerSpeed);

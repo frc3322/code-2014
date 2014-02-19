@@ -79,14 +79,15 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
 	SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 	SmartDashboard::PutNumber("auton mode", autonMode);
-	//SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
+	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
 	char label[3];
 	label[0] = '0';
 	label[1] = ')';
 	label[2] = '\0';
 	const char* descriptions[] = {
 			"Drive to low goal",
-			"Drive to low goal and reverse gatherer to feed ball into low goal"
+			"Drive to low goal and reverse gatherer to feed ball into low goal",
+			"Drive, pull down shooter, fire"
 	};
 	for(unsigned int i = 0; i < sizeof(descriptions)/sizeof(const char*); i++){
 		SmartDashboard::PutString(label,descriptions[i]);
@@ -94,7 +95,7 @@ void Robot::RobotInit() {
 	}
 }
 void Robot::PrintInfoToSmartDashboard() {
-	//static bool pidEnabled = SmartDashboard::GetBoolean("pid gather control enabled");
+	static bool pidEnabled = SmartDashboard::GetBoolean("pid gather control enabled");
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());
 	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
@@ -104,10 +105,10 @@ void Robot::PrintInfoToSmartDashboard() {
 	drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
 	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
 	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));	//if(pidEnabled)
-/*	if(SmartDashboard::GetBoolean("pid gather control enabled") != pidEnabled){
+	if(SmartDashboard::GetBoolean("pid gather control enabled") != pidEnabled){
 		gatherer.setPIDEnabled(!pidEnabled);
 		pidEnabled = !pidEnabled;
-	}*/
+	}
 	P = SmartDashboard::GetNumber("P");
 	I = SmartDashboard::GetNumber("I");
 	D = SmartDashboard::GetNumber("D");
@@ -138,7 +139,9 @@ bool Robot::driveForward(double distance, double speed, double timeout) {
 	double leftDistance = leftEncoder.GetDistance();
 	double rightDistance = rightEncoder.GetDistance();
 	if(leftDistance < distance && rightDistance < distance && Timer::GetPPCTimestamp() < timeout) {
-		drive.ArcadeDrive(-speed,(leftDistance - rightDistance)*1.0);
+		if(leftDistance + 1 > distance || rightDistance + 1.0 > distance)	//if within a foot
+			speed *= 0.5;
+		drive.ArcadeDrive(-speed,-(leftDistance - rightDistance)*5.5);
 		return false;
 	}
 	drive.ArcadeDrive(0.0,0.0);
@@ -149,15 +152,26 @@ void Robot::AutonomousPeriodic() {
 	static const bool hasReachedDestination = true;
 	switch (autonMode) {
 	case 0:	//Drive to low goal
-		driveForward(15.2, 0.7, autonStartTime + 5.0);
+		driveForward(15.2, 0.7, autonStartTime + 7.0);
 	break;
 	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
 		gatherer.setArmAngle(1.9);		//pull back gatherer arm
-		if(driveForward(15.2, 0.7, autonStartTime + 5.0) == hasReachedDestination)//drive forward to low goal
+		if(driveForward(15.2, 0.7, autonStartTime + 7.0) == hasReachedDestination)//drive forward to low goal
 			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 	break;
 	case 2:
-	break;
+		if(driveForward(10.0, 0.7, autonStartTime + 10.0) == hasReachedDestination) {
+			if(Timer::GetPPCTimestamp() > (autonStartTime + 9.5)) {
+				shooter.releaseWinch();
+			}
+		} else
+			shooter.engageWinch();
+		if(Timer::GetPPCTimestamp() < (autonStartTime +4.2)) {
+			shooter.runWinch();
+		} else
+			shooter.stopWinch();
+			
+		break;
 	}
 }
 void Robot::TeleopInit() {
@@ -200,22 +214,24 @@ void Robot::TeleopPeriodic() {
 		gatherer.rollerControl(-1);
 	else
 		gatherer.rollerControl(0);
+	
 	if(gatherer.isPIDEnabled()) { //PID gatherer control
-		if(stick.GetRawButton(ABUTTON))
-			gatherer.setArmAngle(3.7);
-		else
-			gatherer.setArmAngle(4.3);
+		if(stick.GetRawButton(ABUTTON)) {
+			gatherer.setArmAngle(2.65);
+		} else {
+			gatherer.setArmAngle(3);
+		}
 	} else {
-		arm.Set(stick.GetAxis(Joystick::kThrottleAxis)); //Manual Gatherer control
+		arm.Set(stick.GetAxis(Joystick::kThrottleAxis) * 0.5); //Manual Gatherer control
 	}
 	///toggle manual shooter control
 	//if(currentStart && !previousStart)manualShooterControl = !manualShooterControl;
 	if(manualShooterControl) {
 		//release winch (shoot)
 		if(currentX)
-			shooter.releaseWinch();
-		else if(currentB)			//engage winch
 			shooter.engageWinch();
+		else if(currentB)			//engage winch
+			shooter.releaseWinch();
 		//run winch
 		if(stick.GetRawButton(LBUMPER))
 			shooter.runWinch();

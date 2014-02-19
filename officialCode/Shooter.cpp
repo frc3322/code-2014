@@ -18,11 +18,11 @@ void Shooter::runWinch() {
 void Shooter::stopWinch() {
 	winch->Set(0);
 }
-void Shooter:: releaseWinch() {
-		trigger->Set(DoubleSolenoid::kForward);
+void Shooter::releaseWinch() {
+		trigger->Set(DoubleSolenoid::kReverse);
 }
 void Shooter::engageWinch() {
-	trigger->Set(DoubleSolenoid::kReverse);
+	trigger->Set(DoubleSolenoid::kForward);
 }
 void Shooter::runShooter(bool shootButton) {
 	switch (state) {
