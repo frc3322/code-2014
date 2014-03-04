@@ -19,5 +19,6 @@ public:
 	void engageWinch();
 	void runShooter(bool shootButton);
 	bool isReadyToShoot();
+	bool isWinchEngaged();
 };
 #endif

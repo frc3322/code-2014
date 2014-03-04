@@ -11,8 +11,8 @@ highThreshold(4.0), lowThreshold(1.0)
 void Shooter::runWinch() {
 #if ROBOT == COMP
 	winch->Set(-1);
-#else	//1 for practice
-	winch->Set(1);
+#else
+	winch->Set(-1);
 #endif
 }
 void Shooter::stopWinch() {
@@ -42,6 +42,9 @@ void Shooter::runShooter(bool shootButton) {
 		if(shooterPot->GetVoltage() > highThreshold)state = DRAWING_BACK;
 		break;
 	}
+}
+bool Shooter::isWinchEngaged() {
+	return trigger->Get() == DoubleSolenoid::kForward;
 }
 bool Shooter::isReadyToShoot() {
 	return state == DRAWN_BACK;

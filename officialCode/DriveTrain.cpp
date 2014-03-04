@@ -37,7 +37,12 @@ bool DriveTrain::isAutoShiftEnabled() {
 }
 void DriveTrain::takeSpeedSample() {
 	leftSpeedHistory[sampleIndex] = leftEncoder->GetRate();
+//practice and competition bots are different (look in constants.h to change)
+#if ROBOT == COMP
 	rightSpeedHistory[sampleIndex++] = rightEncoder->GetRate();
+#else
+	rightSpeedHistory[sampleIndex++] = rightEncoder->GetRate();
+#endif
 	if(sampleIndex >= NUM_SPEED_SAMPLES) sampleIndex = 0;
 }
 void DriveTrain::shiftAutomatically() {

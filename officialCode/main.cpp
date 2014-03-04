@@ -20,7 +20,7 @@ class Robot : public IterativeRobot
 	Encoder leftEncoder, rightEncoder;
 	TripleSpeedController left, right;
 	DriveTrain drive;
-	Joystick stick;
+	Joystick stick;	//both are xbox controllers
 	Joystick tech;
 	AnalogChannel potentiometer;
 	AnalogChannel shooterPot;
@@ -38,7 +38,11 @@ public:
 		winch(7),
 		arm(9), roller(8),
 		gearShifter(1,2),
+#if ROBOT == COMP
 		trigger(3,4),
+#else
+		trigger(4,3),
+#endif
 		compressor(5,1),
 #if ROBOT == COMP
 		leftEncoder(1,2,true, Encoder::k4X), rightEncoder(3,4,false, Encoder::k4X),
@@ -97,7 +101,7 @@ void Robot::RobotInit() {
 void Robot::PrintInfoToSmartDashboard() {
 	static bool pidEnabled = SmartDashboard::GetBoolean("pid gather control enabled");
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
-	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());
+	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
 	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
@@ -179,7 +183,35 @@ void Robot::TeleopInit() {
 	rightEncoder.SetDistancePerPulse(1.0);
 }
 void Robot::TeleopPeriodic() {
-	static bool currentB = false, previousB = false;
+	drive.takeSpeedSample();
+	drive.shiftAutomatically();
+	float moveValue = stick.GetAxis(Joystick::kYAxis);
+	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
+	//deadband for joystick
+	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
+	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
+	//drive code
+	drive.ArcadeDrive(moveValue,rotateValue);
+	//run roller
+	if(stick.GetRawButton(RBUMPER)||tech.GetRawButton(RBUMPER))
+		gatherer.rollerControl(1);
+	else if (stick.GetRawButton(LBUMPER)||tech.GetRawButton(LBUMPER)) //run roller backward
+		gatherer.rollerControl(-1);
+	else
+		gatherer.rollerControl(0);
+	//catapault
+	if(stick.GetRawAxis(Joystick::kTwistAxis) > 0.8) { //left trigger
+		shooter.stopWinch();
+		shooter.releaseWinch();
+	}else if(stick.GetRawAxis(Joystick::kTwistAxis) < -0.8) {//right trigger
+		if(!shooter.isWinchEngaged())
+			shooter.engageWinch();
+		shooter.runWinch();
+	}else {
+		shooter.stopWinch();
+	}
+	arm.Set(tech.GetAxis(Joystick::kThrottleAxis) * 0.5); //Manual Gatherer control
+	/*static bool currentB = false, previousB = false;
 	static bool currentX = false, previousX = false;
 	static bool currentY = false, previousY = false;
 	static bool currentBack = false, previousBack = false;
@@ -194,27 +226,10 @@ void Robot::TeleopPeriodic() {
 	if(stick.GetRawButton(ABUTTON)) {
 		leftEncoder.Reset();
 		rightEncoder.Reset();
-	}
-	drive.takeSpeedSample();
-	drive.shiftAutomatically();
-	float moveValue = stick.GetAxis(Joystick::kYAxis);
-	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
-	//deadband for joystick
-	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
-	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
-	//drive code
-	drive.ArcadeDrive(moveValue,rotateValue);
-	//code for toggling high/low gear with ybutton
+	}*/	/*//code for toggling high/low gear with ybutton
 	if(currentY && !previousY)
-		drive.toggleShiftGear();
-	//run roller
-	if(stick.GetRawButton(RBUMPER))
-		gatherer.rollerControl(1);
-	else if (stick.GetRawButton(START)) //run roller backward
-		gatherer.rollerControl(-1);
-	else
-		gatherer.rollerControl(0);
-	
+		drive.toggleShiftGear();*/
+	/*
 	if(gatherer.isPIDEnabled()) { //PID gatherer control
 		if(stick.GetRawButton(ABUTTON)) {
 			gatherer.setArmAngle(2.65);
@@ -222,11 +237,11 @@ void Robot::TeleopPeriodic() {
 			gatherer.setArmAngle(3);
 		}
 	} else {
-		arm.Set(stick.GetAxis(Joystick::kThrottleAxis) * 0.5); //Manual Gatherer control
-	}
+		
+	}*/
 	///toggle manual shooter control
 	//if(currentStart && !previousStart)manualShooterControl = !manualShooterControl;
-	if(manualShooterControl) {
+	/*if(manualShooterControl) {
 		//release winch (shoot)
 		if(currentX)
 			shooter.engageWinch();
@@ -244,7 +259,7 @@ void Robot::TeleopPeriodic() {
 	previousBack = currentBack;	
 	previousX = currentX;
 	previousY = currentY;
-	previousB = currentB;
+	previousB = currentB;*/
 	PrintInfoToSmartDashboard();
 }
 void Robot::TestInit() {
