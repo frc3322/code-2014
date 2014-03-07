@@ -103,6 +103,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
 	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
+	SmartDashboard::PutNumber("Shooter potentiometer", shooterPot.GetVoltage());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
 	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
@@ -122,8 +123,8 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
-	SmartDashboard::PutNumber("FPGA time", Timer::GetFPGATimestamp());
-	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
+	
+	
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -164,7 +165,7 @@ void Robot::AutonomousPeriodic() {
 			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 	break;
 	case 2:
-		if(driveForward(10.0, 0.7, autonStartTime + 10.0) == hasReachedDestination) {
+		if(driveForward(15.2, 0.7, autonStartTime + 10.0) == hasReachedDestination) {
 			if(Timer::GetPPCTimestamp() > (autonStartTime + 9.5)) {
 				shooter.releaseWinch();
 			}
