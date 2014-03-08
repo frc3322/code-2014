@@ -224,6 +224,15 @@ void Robot::TeleopPeriodic() {
 	if(gatherControl > 0.03) {
 		arm.Set(gatherControl * 0.5); //Manual Gatherer control
 	} else {
+/*		if(stick.GetRawButton(BBUTTON)) {
+			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
+		} else if(stick.GetRawButton(ABUTTON)) {
+			gatherer.setArmAngle(gatherer.DOWN_POSITION);			
+		} else if(stick.GetRawButton(YBUTTON)) {
+			gatherer.setArmAngle(gatherer.UP_POSITION);			
+		} else if(stick.GetRawButton(XBUTTON)) {
+			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
+		}*/
 	}
 	PrintInfoToSmartDashboard();
 }
