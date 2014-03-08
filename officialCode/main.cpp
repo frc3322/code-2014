@@ -210,32 +210,6 @@ void Robot::TeleopPeriodic() {
 	}else {
 		shooter.stopWinch();
 	}
-	arm.Set(tech.GetAxis(Joystick::kThrottleAxis) * 0.5); //Manual Gatherer control
-	/*static bool currentB = false, previousB = false;
-	static bool currentX = false, previousX = false;
-	static bool currentY = false, previousY = false;
-	static bool currentBack = false, previousBack = false;
-	static bool currentStart = false, previousStart = false;
-	static bool manualShooterControl = true;
-	currentB = stick.GetRawButton(BBUTTON);
-	currentX = stick.GetRawButton(XBUTTON);
-	currentY = stick.GetRawButton(YBUTTON);
-	currentBack = stick.GetRawButton(BACK);
-	currentStart = stick.GetRawButton(START);
-	//reset encoder
-	if(stick.GetRawButton(ABUTTON)) {
-		leftEncoder.Reset();
-		rightEncoder.Reset();
-	}*/	/*//code for toggling high/low gear with ybutton
-	if(currentY && !previousY)
-		drive.toggleShiftGear();*/
-	/*
-	if(gatherer.isPIDEnabled()) { //PID gatherer control
-		if(stick.GetRawButton(ABUTTON)) {
-			gatherer.setArmAngle(2.65);
-		} else {
-			gatherer.setArmAngle(3);
-		}
 	} else {
 		
 	}*/
@@ -255,16 +229,7 @@ void Robot::TeleopPeriodic() {
 	} else {
 		shooter.runShooter(stick.GetRawButton(LBUMPER));
 	}
-	previousStart = currentStart;
-	previousBack = currentBack;	
-	previousX = currentX;
-	previousY = currentY;
-	previousB = currentB;*/
 	PrintInfoToSmartDashboard();
-}
-void Robot::TestInit() {
-}
-void Robot::TestPeriodic() {
 }
 };
 START_ROBOT_CLASS(Robot);
