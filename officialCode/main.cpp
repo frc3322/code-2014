@@ -104,7 +104,6 @@ void Robot::RobotInit() {
 	}
 }
 void Robot::PrintInfoToSmartDashboard() {
-	static bool pidEnabled = SmartDashboard::GetBoolean("pid gather control enabled");
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
 	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
@@ -115,10 +114,6 @@ void Robot::PrintInfoToSmartDashboard() {
 	drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
 	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
 	drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));	//if(pidEnabled)
-	if(SmartDashboard::GetBoolean("pid gather control enabled") != pidEnabled){
-		gatherer.setPIDEnabled(!pidEnabled);
-		pidEnabled = !pidEnabled;
-	}
 	P = SmartDashboard::GetNumber("P");
 	I = SmartDashboard::GetNumber("I");
 	D = SmartDashboard::GetNumber("D");
@@ -130,6 +125,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
 	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
 	SmartDashboard::PutBoolean("draw back catapult",drawBackAutomatically);
+	SmartDashboard::PutNumber("tech trigger axis",tech.GetRawAxis(Joystick::kTwistAxis));
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -188,20 +184,21 @@ void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
 	timeOfLastShot = Timer::GetPPCTimestamp();
-	gatherer.setPIDEnabled(true);
+	gatherer.setPIDEnabled(false);
 	gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 }
 void Robot::TeleopPeriodic() {
-	static bool BACK_PREVIOUS = false, BACK_CURRENT;
+	static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
+	static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
 	drive.takeSpeedSample();
 	drive.shiftAutomatically();
 	float moveValue = stick.GetAxis(Joystick::kYAxis);
 	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
-	BACK_CURRENT = tech.GetRawButton(BACK);
-	if(BACK_CURRENT && !BACK_PREVIOUS) {
+	TECH_BACK_CURRENT = tech.GetRawButton(BACK);
+	if(TECH_BACK_CURRENT && !TECH_BACK_PREVIOUS) {
 		drawBackAutomatically = !drawBackAutomatically;
 	}
-	BACK_PREVIOUS = BACK_CURRENT;
+	TECH_BACK_PREVIOUS = TECH_BACK_CURRENT;
 	//deadband for joystick
 	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
 	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
@@ -228,10 +225,11 @@ void Robot::TeleopPeriodic() {
 	}else {
 		shooter.stopWinch();
 	}
-	float gatherControl = tech.GetAxis(Joystick::kThrottleAxis);
-	if(gatherControl > 0.03) {
+	float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);
+	if(fabs(gatherControl) > 0.03) {
+		//should pid control be disabled? or should setpoint be updated
 		arm.Set(gatherControl * 0.5); //Manual Gatherer control
-	} else {
+	} else if(gatherer.isPIDEnabled()){
 		if(stick.GetRawButton(BBUTTON)) {
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 		} else if(stick.GetRawButton(ABUTTON)) {
@@ -241,8 +239,20 @@ void Robot::TeleopPeriodic() {
 		} else if(stick.GetRawButton(XBUTTON)) {
 			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
 		}
+	} else {
+		arm.Set(0.0);
+	}
+	//zeroing gatherer potentiometer values
+	if(tech.GetRawButton(BBUTTON)) {
+		gatherer.setDownPosition(potentiometer.GetVoltage());
 	}
 	PrintInfoToSmartDashboard();
+	//disabling PID gatherer control
+	TECH_YBUTTON_CURRENT = tech.GetRawButton(YBUTTON);
+	if(TECH_YBUTTON_CURRENT && !TECH_YBUTTON_PREVIOUS) {
+		gatherer.togglePIDEnabled();
+	}
+	TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
 }
 };
 START_ROBOT_CLASS(Robot);
