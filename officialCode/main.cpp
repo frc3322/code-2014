@@ -64,8 +64,8 @@ public:
 		deadbandWidth(0.01),
 		P(-0.4), I(-0.01), D(0.0),
 		autonMode(0),
-		drawBackAutomatically(true),
-		SHOOTER_POT_MIN(0.8)	//change for compitition???
+		drawBackAutomatically(false),
+		SHOOTER_POT_MIN(0.9)	//change for compitition???
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -190,10 +190,16 @@ void Robot::TeleopInit() {
 	timeOfLastShot = Timer::GetPPCTimestamp(); 
 }
 void Robot::TeleopPeriodic() {
+	static bool BACK_PREVIOUS = false, BACK_CURRENT;
 	drive.takeSpeedSample();
 	drive.shiftAutomatically();
 	float moveValue = stick.GetAxis(Joystick::kYAxis);
 	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
+	BACK_CURRENT = tech.GetRawButton(BACK);
+	if(BACK_CURRENT && !BACK_PREVIOUS) {
+		drawBackAutomatically = !drawBackAutomatically;
+	}
+	BACK_PREVIOUS = BACK_CURRENT;
 	//deadband for joystick
 	if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
 	if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
