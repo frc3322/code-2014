@@ -62,7 +62,7 @@ public:
 		gatherer(&roller,&potentiometer,&armController),
 		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),
-		P(-0.4), I(-0.01), D(0.0),
+		P(1.0), I(0.01), D(0.5),
 		autonMode(0),
 		drawBackAutomatically(false),
 		SHOOTER_POT_MIN(0.9)	//change for compitition???
@@ -187,7 +187,9 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
-	timeOfLastShot = Timer::GetPPCTimestamp(); 
+	timeOfLastShot = Timer::GetPPCTimestamp();
+	gatherer.setPIDEnabled(true);
+	gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 }
 void Robot::TeleopPeriodic() {
 	static bool BACK_PREVIOUS = false, BACK_CURRENT;
@@ -230,7 +232,7 @@ void Robot::TeleopPeriodic() {
 	if(gatherControl > 0.03) {
 		arm.Set(gatherControl * 0.5); //Manual Gatherer control
 	} else {
-/*		if(stick.GetRawButton(BBUTTON)) {
+		if(stick.GetRawButton(BBUTTON)) {
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 		} else if(stick.GetRawButton(ABUTTON)) {
 			gatherer.setArmAngle(gatherer.DOWN_POSITION);			
@@ -238,7 +240,7 @@ void Robot::TeleopPeriodic() {
 			gatherer.setArmAngle(gatherer.UP_POSITION);			
 		} else if(stick.GetRawButton(XBUTTON)) {
 			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
-		}*/
+		}
 	}
 	PrintInfoToSmartDashboard();
 }
