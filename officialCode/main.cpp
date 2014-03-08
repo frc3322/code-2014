@@ -32,6 +32,9 @@ class Robot : public IterativeRobot
 	double P, I, D;
 	unsigned int autonMode;
 	double autonStartTime;
+	double timeOfLastShot;
+	bool drawBackAutomatically;
+	float SHOOTER_POT_MIN;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -60,7 +63,9 @@ public:
 		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),
 		P(-0.4), I(-0.01), D(0.0),
-		autonMode(0)
+		autonMode(0),
+		drawBackAutomatically(true),
+		SHOOTER_POT_MIN(0.8)	//change for compitition???
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -123,8 +128,8 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
-	
-	
+	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
+	SmartDashboard::PutBoolean("draw back catapult",drawBackAutomatically);
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -182,6 +187,7 @@ void Robot::AutonomousPeriodic() {
 void Robot::TeleopInit() {
 	leftEncoder.SetDistancePerPulse(1.0);
 	rightEncoder.SetDistancePerPulse(1.0);
+	timeOfLastShot = Timer::GetPPCTimestamp(); 
 }
 void Robot::TeleopPeriodic() {
 	drive.takeSpeedSample();
@@ -201,71 +207,34 @@ void Robot::TeleopPeriodic() {
 	else
 		gatherer.rollerControl(0);
 	//catapault
-	if(stick.GetRawAxis(Joystick::kTwistAxis) > 0.8) { //left trigger
+	float secondsSinceLastShot = Timer::GetPPCTimestamp() - timeOfLastShot;
+	if(stick.GetRawAxis(Joystick::kTwistAxis) > 0.8) { //left trigger = shoot
 		shooter.stopWinch();
 		shooter.releaseWinch();
-	}else if(stick.GetRawAxis(Joystick::kTwistAxis) < -0.8) {//right trigger
+		timeOfLastShot = Timer::GetPPCTimestamp();
+	}else if(((drawBackAutomatically && shooterPot.GetVoltage() > SHOOTER_POT_MIN)
+			|| stick.GetRawAxis(Joystick::kTwistAxis) < -0.8) &&  secondsSinceLastShot > 0.5) {//right trigger
 		if(!shooter.isWinchEngaged())
 			shooter.engageWinch();
 		shooter.runWinch();
 	}else {
 		shooter.stopWinch();
 	}
-	arm.Set(tech.GetAxis(Joystick::kThrottleAxis) * 0.5); //Manual Gatherer control
-	/*static bool currentB = false, previousB = false;
-	static bool currentX = false, previousX = false;
-	static bool currentY = false, previousY = false;
-	static bool currentBack = false, previousBack = false;
-	static bool currentStart = false, previousStart = false;
-	static bool manualShooterControl = true;
-	currentB = stick.GetRawButton(BBUTTON);
-	currentX = stick.GetRawButton(XBUTTON);
-	currentY = stick.GetRawButton(YBUTTON);
-	currentBack = stick.GetRawButton(BACK);
-	currentStart = stick.GetRawButton(START);
-	//reset encoder
-	if(stick.GetRawButton(ABUTTON)) {
-		leftEncoder.Reset();
-		rightEncoder.Reset();
-	}*/	/*//code for toggling high/low gear with ybutton
-	if(currentY && !previousY)
-		drive.toggleShiftGear();*/
-	/*
-	if(gatherer.isPIDEnabled()) { //PID gatherer control
-		if(stick.GetRawButton(ABUTTON)) {
-			gatherer.setArmAngle(2.65);
-		} else {
-			gatherer.setArmAngle(3);
-		}
+	float gatherControl = tech.GetAxis(Joystick::kThrottleAxis);
+	if(gatherControl > 0.03) {
+		arm.Set(gatherControl * 0.5); //Manual Gatherer control
 	} else {
-		
-	}*/
-	///toggle manual shooter control
-	//if(currentStart && !previousStart)manualShooterControl = !manualShooterControl;
-	/*if(manualShooterControl) {
-		//release winch (shoot)
-		if(currentX)
-			shooter.engageWinch();
-		else if(currentB)			//engage winch
-			shooter.releaseWinch();
-		//run winch
-		if(stick.GetRawButton(LBUMPER))
-			shooter.runWinch();
-		else
-			shooter.stopWinch();
-	} else {
-		shooter.runShooter(stick.GetRawButton(LBUMPER));
+/*		if(stick.GetRawButton(BBUTTON)) {
+			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
+		} else if(stick.GetRawButton(ABUTTON)) {
+			gatherer.setArmAngle(gatherer.DOWN_POSITION);			
+		} else if(stick.GetRawButton(YBUTTON)) {
+			gatherer.setArmAngle(gatherer.UP_POSITION);			
+		} else if(stick.GetRawButton(XBUTTON)) {
+			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
+		}*/
 	}
-	previousStart = currentStart;
-	previousBack = currentBack;	
-	previousX = currentX;
-	previousY = currentY;
-	previousB = currentB;*/
 	PrintInfoToSmartDashboard();
-}
-void Robot::TestInit() {
-}
-void Robot::TestPeriodic() {
 }
 };
 START_ROBOT_CLASS(Robot);

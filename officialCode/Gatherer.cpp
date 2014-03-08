@@ -2,7 +2,8 @@
 #include "WPILib.h"
 
 Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armController):
-		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false)
+		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false),
+		FORWARD_POSITION(1.64), BACKWARD_POSITION(2.85), UP_POSITION(2.46), DOWN_POSITION(1.26)
 {
 	armAngle->SetVoltageForPID(true);
 	armController->SetOutputRange(-.4,.4);
