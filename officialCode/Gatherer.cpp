@@ -3,7 +3,7 @@
 
 Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armController, double offset):
 		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false),offset(offset),
-		FORWARD_POSITION(1.64), BACKWARD_POSITION(2.85), UP_POSITION(2.46), DOWN_POSITION(1.26)
+		FORWARD_POSITION(2.34), BACKWARD_POSITION(3.7), UP_POSITION(3.0), DOWN_POSITION(1.8)
 {
 	armAngle->SetVoltageForPID(true);
 	armController->SetOutputRange(-.4,.4);

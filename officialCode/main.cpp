@@ -22,7 +22,7 @@ class Robot : public IterativeRobot
 	DriveTrain drive;
 	Joystick stick;	//both are xbox controllers
 	Joystick tech;
-	AnalogChannel potentiometer;
+	AnalogChannel gathererPot;
 	AnalogChannel shooterPot;
 	PIDController armController;
 	Gatherer gatherer;
@@ -32,15 +32,16 @@ class Robot : public IterativeRobot
 	double P, I, D;
 	unsigned int autonMode;
 	double autonStartTime;
+	double autonDistance;
+	double autonSpeed;
+	double autonDriveTimeout;
+	double autonShooterPosition;
+	double autonShotDelay;
 	double timeOfLastShot;
-	bool drawBackAutomatically;
-	float SHOOTER_POT_MIN;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
-		winch(7),
-		arm(9), roller(8),
-		gearShifter(1,2),
+		winch(7), arm(9), roller(8), gearShifter(1,2),
 #if ROBOT == COMP
 		trigger(3,4),
 #else
@@ -54,18 +55,15 @@ public:
 #endif
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
-		stick(1),
-		tech(2),
-		potentiometer(2),
-		shooterPot(1),
-		armController(-1.0,0.0,0.0,&potentiometer,&arm), //should get PID values from smartdashboard for the purpose of testing
-		gatherer(&roller,&potentiometer,&armController),
+		stick(1),tech(2),
+		gathererPot(2), shooterPot(1),
+		armController(-1.0,0.0,0.0,&gathererPot,&arm), //should get PID values from smartdashboard for the purpose of testing
+		gatherer(&roller,&gathererPot,&armController),
 		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),
 		P(1.0), I(0.01), D(0.5),
-		autonMode(0),
-		drawBackAutomatically(false),
-		SHOOTER_POT_MIN(0.9)	//change for compitition???
+		autonMode(0), autonStartTime(0.0), autonDistance(15.2), autonSpeed(0.7), autonDriveTimeout(10.0),
+		autonShooterPosition(0.9), autonShotDelay(1.0)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -102,14 +100,21 @@ void Robot::RobotInit() {
 		SmartDashboard::PutString(label,descriptions[i]);
 		label[0] = label[0] < '9' ? label[0] + 1 : '0';
 	}
+	SmartDashboard::PutNumber("autonStartTime",autonStartTime);
+	SmartDashboard::PutNumber("autonDistance",autonDistance);
+	SmartDashboard::PutNumber("autonSpeed",autonSpeed);
+	SmartDashboard::PutNumber("autonDriveTimeout",autonDriveTimeout);
+	SmartDashboard::PutNumber("autonShooterPosition",autonShooterPosition);
+	SmartDashboard::PutNumber("autonShotDelay",autonShotDelay);
 }
 void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
 	SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
-	drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
+	//drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
+	SmartDashboard::PutBoolean("auto shift enabled", drive.isAutoShiftEnabled());
 	SmartDashboard::PutNumber("Shooter potentiometer", shooterPot.GetVoltage());
 	SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
-	SmartDashboard::PutNumber("Arm potentiometer", potentiometer.GetVoltage());
+	SmartDashboard::PutNumber("Arm potentiometer", gathererPot.GetVoltage());
 	deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
 	drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
 	drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
@@ -124,8 +129,14 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
 	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
-	SmartDashboard::PutBoolean("draw back catapult",drawBackAutomatically);
+	SmartDashboard::PutBoolean("auto load catapult",shooter.autoLoad);
 	SmartDashboard::PutNumber("tech trigger axis",tech.GetRawAxis(Joystick::kTwistAxis));
+	autonStartTime = SmartDashboard::GetNumber("autonStartTime");
+	autonDistance = SmartDashboard::GetNumber("autonDistance");
+	autonSpeed = SmartDashboard::GetNumber("autonSpeed");
+	autonDriveTimeout = SmartDashboard::GetNumber("autonDriveTimeout");
+	autonShooterPosition = SmartDashboard::GetNumber("autonShooterPosition");
+	autonShotDelay = SmartDashboard::GetNumber("autonShotDelay");
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -140,13 +151,14 @@ void Robot::AutonomousInit() {
 	rightEncoder.Reset();
 	drive.shiftLowGear();
 	autonStartTime = Timer::GetPPCTimestamp();
+	shooter.engageWinch();
 }
 bool Robot::driveForward(double distance, double speed, double timeout) {
 	double leftDistance = leftEncoder.GetDistance();
 	double rightDistance = rightEncoder.GetDistance();
-	if(leftDistance < distance && rightDistance < distance && Timer::GetPPCTimestamp() < timeout) {
-		if(leftDistance + 1 > distance || rightDistance + 1.0 > distance)	//if within a foot
-			speed *= 0.5;
+	if(leftDistance < distance && rightDistance < distance){// && Timer::GetPPCTimestamp() < timeout) {
+		if(leftDistance + 1.0 > distance || rightDistance + 1.0 > distance)	//if within a foot
+			speed = speed * 0.5;
 		drive.ArcadeDrive(-speed,-(leftDistance - rightDistance)*5.5);
 		return false;
 	}
@@ -158,25 +170,21 @@ void Robot::AutonomousPeriodic() {
 	static const bool hasReachedDestination = true;
 	switch (autonMode) {
 	case 0:	//Drive to low goal
-		driveForward(15.2, 0.7, autonStartTime + 7.0);
+		driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout);
 	break;
 	case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
-		gatherer.setArmAngle(1.9);		//pull back gatherer arm
-		if(driveForward(15.2, 0.7, autonStartTime + 7.0) == hasReachedDestination)//drive forward to low goal
+		gatherer.setArmAngle(gatherer.BACKWARD_POSITION);		//pull back gatherer arm
+		if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination)//drive forward to low goal
 			gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 	break;
 	case 2:
-		if(driveForward(15.2, 0.7, autonStartTime + 10.0) == hasReachedDestination) {
-			if(Timer::GetPPCTimestamp() > (autonStartTime + 9.5)) {
+		if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination)
+			if(shooterPot.GetVoltage() <= /*shooter.POT_MIN*/ .4)
 				shooter.releaseWinch();
-			}
-		} else
-			shooter.engageWinch();
-		if(Timer::GetPPCTimestamp() < (autonStartTime +4.2)) {
+		if(shooterPot.GetVoltage() > shooter.POT_MIN)
 			shooter.runWinch();
-		} else
+		else
 			shooter.stopWinch();
-			
 		break;
 	}
 }
@@ -190,13 +198,14 @@ void Robot::TeleopInit() {
 void Robot::TeleopPeriodic() {
 	static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
 	static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
+	static bool TECH_XBUTTON_PREVIOUS = false, TECH_XBUTTON_CURRENT;
 	drive.takeSpeedSample();
 	drive.shiftAutomatically();
 	float moveValue = stick.GetAxis(Joystick::kYAxis);
 	float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
-	TECH_BACK_CURRENT = tech.GetRawButton(BACK);
+	TECH_BACK_CURRENT = tech.GetRawButton(XBOX::BACK);
 	if(TECH_BACK_CURRENT && !TECH_BACK_PREVIOUS) {
-		drawBackAutomatically = !drawBackAutomatically;
+		shooter.toggleAutoLoad();
 	}
 	TECH_BACK_PREVIOUS = TECH_BACK_CURRENT;
 	//deadband for joystick
@@ -205,9 +214,9 @@ void Robot::TeleopPeriodic() {
 	//drive code
 	drive.ArcadeDrive(moveValue,rotateValue);
 	//run roller
-	if(stick.GetRawButton(RBUMPER)||tech.GetRawButton(RBUMPER))
+	if(stick.GetRawButton(XBOX::RBUMPER)||tech.GetRawButton(XBOX::RBUMPER))
 		gatherer.rollerControl(1);
-	else if (stick.GetRawButton(LBUMPER)||tech.GetRawButton(LBUMPER)) //run roller backward
+	else if (stick.GetRawButton(XBOX::LBUMPER)||tech.GetRawButton(XBOX::LBUMPER)) //run roller backward
 		gatherer.rollerControl(-1);
 	else
 		gatherer.rollerControl(0);
@@ -217,7 +226,7 @@ void Robot::TeleopPeriodic() {
 		shooter.stopWinch();
 		shooter.releaseWinch();
 		timeOfLastShot = Timer::GetPPCTimestamp();
-	}else if(((drawBackAutomatically && shooterPot.GetVoltage() > SHOOTER_POT_MIN)
+	}else if(((shooter.autoLoad && shooterPot.GetVoltage() > shooter.POT_MIN)
 			|| stick.GetRawAxis(Joystick::kTwistAxis) < -0.8) &&  secondsSinceLastShot > 0.5) {//right trigger
 		if(!shooter.isWinchEngaged())
 			shooter.engageWinch();
@@ -230,29 +239,34 @@ void Robot::TeleopPeriodic() {
 		//should pid control be disabled? or should setpoint be updated
 		arm.Set(gatherControl * 0.5); //Manual Gatherer control
 	} else if(gatherer.isPIDEnabled()){
-		if(stick.GetRawButton(BBUTTON)) {
+		if(stick.GetRawButton(XBOX::BBUTTON)) {
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
-		} else if(stick.GetRawButton(ABUTTON)) {
+		} else if(stick.GetRawButton(XBOX::ABUTTON)) {
 			gatherer.setArmAngle(gatherer.DOWN_POSITION);			
-		} else if(stick.GetRawButton(YBUTTON)) {
+		} else if(stick.GetRawButton(XBOX::YBUTTON)) {
 			gatherer.setArmAngle(gatherer.UP_POSITION);			
-		} else if(stick.GetRawButton(XBUTTON)) {
+		} else if(stick.GetRawButton(XBOX::XBUTTON)) {
 			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
 		}
 	} else {
 		arm.Set(0.0);
 	}
 	//zeroing gatherer potentiometer values
-	if(tech.GetRawButton(BBUTTON)) {
-		gatherer.setDownPosition(potentiometer.GetVoltage());
+	if(tech.GetRawButton(XBOX::BBUTTON)) {
+		gatherer.setDownPosition(gathererPot.GetVoltage());
 	}
-	PrintInfoToSmartDashboard();
 	//disabling PID gatherer control
-	TECH_YBUTTON_CURRENT = tech.GetRawButton(YBUTTON);
+	TECH_YBUTTON_CURRENT = tech.GetRawButton(XBOX::YBUTTON);
 	if(TECH_YBUTTON_CURRENT && !TECH_YBUTTON_PREVIOUS) {
 		gatherer.togglePIDEnabled();
 	}
 	TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
+	//toggle autoshift enable
+	TECH_XBUTTON_CURRENT = tech.GetRawButton(XBOX::XBUTTON);
+	if(TECH_XBUTTON_CURRENT && !TECH_XBUTTON_PREVIOUS) {
+		drive.toogleAutoShiftEnable();
+	}
+	PrintInfoToSmartDashboard();
 }
 };
 START_ROBOT_CLASS(Robot);

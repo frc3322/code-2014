@@ -20,5 +20,8 @@ public:
 	void runShooter(bool shootButton);
 	bool isReadyToShoot();
 	bool isWinchEngaged();
+	void toggleAutoLoad();
+	const double POT_MIN;
+	bool autoLoad;
 };
 #endif
