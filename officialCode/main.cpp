@@ -128,15 +128,16 @@ void Robot::PrintInfoToSmartDashboard() {
 	shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 	SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 	autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
-	SmartDashboard::PutNumber("PPC time", Timer::GetFPGATimestamp());
+	SmartDashboard::PutNumber("PPC time", Timer::GetPPCTimestamp());
 	SmartDashboard::PutBoolean("auto load catapult",shooter.autoLoad);
 	SmartDashboard::PutNumber("tech trigger axis",tech.GetRawAxis(Joystick::kTwistAxis));
-	autonStartTime = SmartDashboard::GetNumber("autonStartTime");
+	SmartDashboard::PutNumber("autonStartTime",autonStartTime);
 	autonDistance = SmartDashboard::GetNumber("autonDistance");
 	autonSpeed = SmartDashboard::GetNumber("autonSpeed");
 	autonDriveTimeout = SmartDashboard::GetNumber("autonDriveTimeout");
 	autonShooterPosition = SmartDashboard::GetNumber("autonShooterPosition");
 	autonShotDelay = SmartDashboard::GetNumber("autonShotDelay");
+
 }
 void Robot::DisabledInit() {
 	gatherer.setPIDEnabled(false);
@@ -156,7 +157,7 @@ void Robot::AutonomousInit() {
 bool Robot::driveForward(double distance, double speed, double timeout) {
 	double leftDistance = leftEncoder.GetDistance();
 	double rightDistance = rightEncoder.GetDistance();
-	if(leftDistance < distance && rightDistance < distance){// && Timer::GetPPCTimestamp() < timeout) {
+	if(leftDistance < distance && rightDistance < distance && Timer::GetPPCTimestamp() < timeout) {
 		if(leftDistance + 1.0 > distance || rightDistance + 1.0 > distance)	//if within a foot
 			speed = speed * 0.5;
 		drive.ArcadeDrive(-speed,-(leftDistance - rightDistance)*5.5);
