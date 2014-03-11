@@ -10,6 +10,9 @@
 double ceiling(double a, double c) {
 	return a > c ? c : a;
 }
+double floor(double a, double f) {
+	return a < f ? f : a;
+}
 class Robot : public IterativeRobot
 {
 	Talon left1, left2, left3, right1, right2, right3;
@@ -38,6 +41,7 @@ class Robot : public IterativeRobot
 	double autonShooterPosition;
 	double autonShotDelay;
 	double timeOfLastShot;
+	double autonWinchTimeout;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -63,7 +67,7 @@ public:
 		deadbandWidth(0.01),
 		P(1.0), I(0.01), D(0.5),
 		autonMode(0), autonStartTime(0.0), autonDistance(15.2), autonSpeed(0.7), autonDriveTimeout(10.0),
-		autonShooterPosition(0.9), autonShotDelay(1.0)
+		autonShooterPosition(0.9), autonShotDelay(1.0), autonWinchTimeout(5.0)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -106,6 +110,7 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("autonDriveTimeout",autonDriveTimeout);
 	SmartDashboard::PutNumber("autonShooterPosition",autonShooterPosition);
 	SmartDashboard::PutNumber("autonShotDelay",autonShotDelay);
+	SmartDashboard::PutNumber("autonWinchTimeout",autonWinchTimeout);
 }
 void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
@@ -134,9 +139,11 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("autonStartTime",autonStartTime);
 	autonDistance = SmartDashboard::GetNumber("autonDistance");
 	autonSpeed = SmartDashboard::GetNumber("autonSpeed");
-	autonDriveTimeout = SmartDashboard::GetNumber("autonDriveTimeout");
-	autonShooterPosition = SmartDashboard::GetNumber("autonShooterPosition");
-	autonShotDelay = SmartDashboard::GetNumber("autonShotDelay");
+	autonDriveTimeout = fabs(SmartDashboard::GetNumber("autonDriveTimeout"));
+	autonShooterPosition = floor(fabs(SmartDashboard::GetNumber("autonShooterPosition")),shooter.POT_MIN);	//don't set it too low
+	SmartDashboard::PutNumber("autonShooterPosition",autonShooterPosition);
+	autonShotDelay = fabs(SmartDashboard::GetNumber("autonShotDelay"));
+	autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
 
 }
 void Robot::DisabledInit() {
@@ -153,6 +160,7 @@ void Robot::AutonomousInit() {
 	drive.shiftLowGear();
 	autonStartTime = Timer::GetPPCTimestamp();
 	shooter.engageWinch();
+	gatherer.setPIDEnabled(true);
 }
 bool Robot::driveForward(double distance, double speed, double timeout) {
 	double leftDistance = leftEncoder.GetDistance();
@@ -169,6 +177,8 @@ bool Robot::driveForward(double distance, double speed, double timeout) {
 void Robot::AutonomousPeriodic() {
 	PrintInfoToSmartDashboard();
 	static const bool hasReachedDestination = true;
+	static bool hasShot = false;
+	static bool hasGathered = false;
 	switch (autonMode) {
 	case 0:	//Drive to low goal
 		driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout);
@@ -180,13 +190,33 @@ void Robot::AutonomousPeriodic() {
 	break;
 	case 2:
 		if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination)
-			if(shooterPot.GetVoltage() <= /*shooter.POT_MIN*/ .4)
+			if(shooterPot.GetVoltage() < autonShooterPosition);
 				shooter.releaseWinch();
-		if(shooterPot.GetVoltage() > shooter.POT_MIN)
+		if(shooterPot.GetVoltage() > autonShooterPosition && Timer::GetPPCTimestamp() < autonStartTime + autonWinchTimeout )
 			shooter.runWinch();
 		else
 			shooter.stopWinch();
 		break;
+	case 3:
+		///needs testing
+		if(!hasShot) {
+			shooter.releaseWinch();
+			hasShot = true;
+		}
+		if(!hasGathered) {
+			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
+			gatherer.rollerControl(1.0);
+			if(driveForward(2,autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination) {
+				if(Timer::GetPPCTimestamp() > autonStartTime + 3.0)
+					hasGathered = true;
+			}
+		} else {
+			driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
+		}
+		if(shooterPot.GetVoltage() > autonShooterPosition)
+			shooter.runWinch();
+		else
+			shooter.stopWinch();		break;
 	}
 }
 void Robot::TeleopInit() {
