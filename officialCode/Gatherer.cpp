@@ -4,7 +4,7 @@
 Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armController, double offset):
 		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false),offset(offset),
 		#if ROBOT == COMP
-		FORWARD_POSITION(3.3), BACKWARD_POSITION(2.6), UP_POSITION(2.8), DOWN_POSITION(3.65)
+		FORWARD_POSITION(3.3), BACKWARD_POSITION(2.34), UP_POSITION(2.75), DOWN_POSITION(3.62)
 		#else
 		FORWARD_POSITION(2.34), BACKWARD_POSITION(3.7), UP_POSITION(3.0), DOWN_POSITION(1.8)
 #endif

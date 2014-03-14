@@ -120,7 +120,4 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="timeout boolean"/>
-	<hidden field="auton start time"/>
-	<hidden field="timeout"/>
 </xml>

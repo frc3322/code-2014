@@ -66,11 +66,11 @@ public:
 		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),
 #if ROBOT==COMP
-		P(.2), I(0.0), D(0.0),
+		P(-1.2), I(-0.01), D(0.3),
 #else
 		P(1.0), I(0.01), D(0.5),
 #endif
-		autonMode(0), autonStartTime(0.0), autonDistance(15.2), autonSpeed(0.7), autonDriveTimeout(10.0),
+		autonMode(2), autonStartTime(0.0), autonDistance(15.2), autonSpeed(0.7), autonDriveTimeout(10.0),
 		autonShooterPosition(0.9), autonShotDelay(1.0), autonWinchTimeout(5.0)
 	{
 		drive.SetExpiration(0.1);
@@ -95,6 +95,7 @@ void Robot::RobotInit() {
 	SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 	SmartDashboard::PutNumber("auton mode", autonMode);
 	SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
+	SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
 	char label[3];
 	label[0] = '0';
 	label[1] = ')';
@@ -149,6 +150,7 @@ void Robot::PrintInfoToSmartDashboard() {
 	SmartDashboard::PutNumber("autonShooterPosition",autonShooterPosition);
 	autonShotDelay = fabs(SmartDashboard::GetNumber("autonShotDelay"));
 	autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
+	shooter.POT_MIN = SmartDashboard::GetNumber("Shooter Pot Fire Position");
 
 }
 void Robot::DisabledInit() {
@@ -292,6 +294,7 @@ void Robot::TeleopPeriodic() {
 		arm.Set(0.0);
 	}
 	//zeroing gatherer potentiometer values
+	//would be good to only do this if PID is enabled
 	if(tech.GetRawButton(XBOX::BBUTTON)) {
 		gatherer.setDownPosition(gathererPot.GetVoltage());
 	}
@@ -300,6 +303,7 @@ void Robot::TeleopPeriodic() {
 	TECH_YBUTTON_CURRENT = tech.GetRawButton(XBOX::YBUTTON);
 	if(TECH_YBUTTON_CURRENT && !TECH_YBUTTON_PREVIOUS) {
 		gatherer.togglePIDEnabled();
+		//we could set a default position
 	}
 	TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
 	
