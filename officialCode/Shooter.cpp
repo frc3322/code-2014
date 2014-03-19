@@ -4,7 +4,7 @@
 
 Shooter::Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger):
 winch(winch), shooterPot(shooterPot), trigger(trigger), state(DRAWING_BACK), 
-highThreshold(2.4), lowThreshold(1.0), POT_MIN(0.85), autoLoad(false)
+highThreshold(2.4), lowThreshold(1.0), POT_MIN(1.3), autoLoad(false)
 {
 	trigger->Set(DoubleSolenoid::kForward);
 }
