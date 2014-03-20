@@ -1,5 +1,12 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Gatherer Potentiometer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="525"/>
+	</widget>
+	<widget field="Current AutonMode is " type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="504"/>
+		<width>346</width>
+	</widget>
 	<widget field="Shooter Pot Fire Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="483"/>
 	</widget>

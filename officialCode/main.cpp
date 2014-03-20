@@ -77,58 +77,56 @@ public:
 		compressor.Start();
 		leftEncoder.Start();
 		rightEncoder.Start();
-		SmartDashboard::init();
-		//have to put numbers before you can get them
-		SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
-		SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
-		SmartDashboard::PutNumber("shift high point",drive.shiftHighPoint);
-		SmartDashboard::PutNumber("shift low point",drive.shiftLowPoint);
-		SmartDashboard::PutNumber("shift counter threshold",drive.shiftCounterThreshold);
-		drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
-		SmartDashboard::PutNumber("P",P);
-		SmartDashboard::PutNumber("I",I);
-		SmartDashboard::PutNumber("D",D);
-		SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
-		SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
-		SmartDashboard::PutNumber("auton mode", autonMode);
-		SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
-		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
+
 		char label[3];
 		label[0] = '0';
 		label[1] = ')';
 		label[2] = '\0';
-		const char* descriptions[] = {
+		SmartDashboard::PutNumber("auton mode", autonMode);
+		SmartDashboard::PutNumber("shift counter threshold",drive.shiftCounterThreshold);
+		drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
+	/*	const char* descriptions[] = {
 				"Drive to low goal",
 				"Drive to low goal and reverse gatherer to feed ball into low goal",
 				"Drive, pull down shooter, fire"
 		};
 		for(unsigned int i = 0; i < sizeof(descriptions)/sizeof(const char*); i++){
 			SmartDashboard::PutString(label,descriptions[i]);
-			label[0] = label[0] < '9' ? label[0] + 1 : '0';
+			label[0] = label[0] < '9' ? label[0] : '0';
 		}
+*/
+	}
+	void Robot::PrintInfoToSmartDashboard() {
+		SmartDashboard::PutNumber("Gatherer Potentiometer", gathererPot.GetVoltage());
+		SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
+		SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
+		//drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
+		SmartDashboard::PutBoolean("auto shift enabled", drive.isAutoShiftEnabled());
+		SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
+		SmartDashboard::PutNumber("Arm potentiometer", gathererPot.GetVoltage());
+		SmartDashboard::PutNumber("joystick deadband", deadbandWidth);
+		SmartDashboard::PutBoolean("Is auto shift enabled", drive.isAutoShiftEnabled());
+		SmartDashboard::PutNumber("shift high point",drive.shiftHighPoint);
+		SmartDashboard::PutNumber("shift low point",drive.shiftLowPoint);
+		SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
+		SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 		SmartDashboard::PutNumber("autonStartTime",autonStartTime);
 		SmartDashboard::PutNumber("autonDistance",autonDistance);
 		SmartDashboard::PutNumber("autonSpeed",autonSpeed);
 		SmartDashboard::PutNumber("autonDriveTimeout",autonDriveTimeout);
 		SmartDashboard::PutNumber("autonWinchTimeout",autonWinchTimeout);
-	}
-	void Robot::PrintInfoToSmartDashboard() {
-		SmartDashboard::PutNumber("left  encoder",leftEncoder.GetDistance());
-		SmartDashboard::PutNumber("right encoder",rightEncoder.GetDistance());	
-		//drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
-		SmartDashboard::PutBoolean("auto shift enabled", drive.isAutoShiftEnabled());
+		SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
+		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
 		SmartDashboard::PutNumber("Shooter potentiometer", shooterPot.GetVoltage());
-		SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
-		SmartDashboard::PutNumber("Arm potentiometer", gathererPot.GetVoltage());
 		deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
 		drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
 		drive.shiftLowPoint = fabs(SmartDashboard::GetNumber("shift low point"));
 		drive.shiftCounterThreshold = (unsigned int)fabs(SmartDashboard::GetNumber("shift counter threshold"));	//if(pidEnabled)
+
 		P = SmartDashboard::GetNumber("P");
 		I = SmartDashboard::GetNumber("I");
 		D = SmartDashboard::GetNumber("D");
 		armController.SetPID(P,I,D);
-		SmartDashboard::PutNumber("shooter pot", shooterPot.GetVoltage());
 		shooter.highThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter high threshold")),5.0);
 		shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
 		SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
@@ -142,6 +140,15 @@ public:
 		autonDriveTimeout = fabs(SmartDashboard::GetNumber("autonDriveTimeout"));
 		autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
 		shooter.POT_MIN = SmartDashboard::GetNumber("Shooter Pot Fire Position");
+		if(autonMode == 0){
+			SmartDashboard::PutString("Current AutonMode is ", "Drive Forward");
+		}
+		else if(autonMode == 1){
+			SmartDashboard::PutString("Current AutonMode is ", "Drive to low goal and reverse gather into low goal");
+		}
+		else if(autonMode == 2){
+			SmartDashboard::PutString("Current AutonMode is ", "Drive forward, and shoot in high goal");
+		}
 
 	}
 	void Robot::DisabledInit() {
@@ -199,7 +206,7 @@ public:
 			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination)//drive forward to low goal
 				gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 			break;
-		case 2:
+		case 2:  //high goal 1 shot
 			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination) {
 				if(timeReachedDestination == 0) {
 					timeReachedDestination = Timer::GetPPCTimestamp();
@@ -214,7 +221,7 @@ public:
 			else
 				shooter.stopWinch();
 			break;
-		case 3:
+		case 3: //2 ball auton
 			///needs testing
 			if(!hasShot) {
 				shooter.releaseWinch();
