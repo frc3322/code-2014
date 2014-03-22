@@ -3,7 +3,7 @@
 
 #define PRACTICE 20141
 #define COMP 20142
-#define ROBOT COMP
+#define ROBOT PRACTICE
 #if ROBOT == PRACTICE
 
 #else
