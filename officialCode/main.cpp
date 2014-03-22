@@ -141,6 +141,8 @@ public:
 		autonDriveTimeout = fabs(SmartDashboard::GetNumber("autonDriveTimeout"));
 		autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
 		shooter.POT_MIN = SmartDashboard::GetNumber("Shooter Pot Fire Position");
+		SmartDashboard::PutNumber("left  encoder speed",leftEncoder.GetRate());
+		SmartDashboard::PutNumber("right encoder speed",rightEncoder.GetRate());
 
 	}
 	void Robot::DisabledInit() {
