@@ -1,118 +1,101 @@
 <xml version="1.0">
 <dashboard>
-	<widget field="Shooter Pot Fire Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="483"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Image">
+		<location x="720" y="224"/>
+		<width>302</width>
+		<height>184</height>
+		<property name="Image File" value="C:\Users\FRC 3322-04\Downloads\Flag-Alpha.png"/>
+		<property name="Maintain Aspect Ratio" value="true"/>
+	</static-widget>
+	<widget field="auto shift enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="432" y="80"/>
+		<width>120</width>
+		<height>32</height>
 	</widget>
-	<widget field="autonWinchTimeout" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="294"/>
+	<widget field="Shooter potentiometer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="0" y="16"/>
+		<width>240</width>
+		<height>160</height>
+		<property name="Upper Limit" value="5.0"/>
+		<property name="Tick Interval" value="1.0"/>
 	</widget>
-	<widget field="autonStartTime" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="273"/>
+	<widget field="2)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="784" y="48"/>
+		<width>179</width>
+		<property name="Background" value="204.255.204.255"/>
 	</widget>
-	<widget field="autonSpeed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="252"/>
+	<widget field="1)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="784" y="32"/>
+		<width>231</width>
+		<property name="Background" value="255.255.204.255"/>
 	</widget>
-	<widget field="autonShotDelay" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="231"/>
-	</widget>
-	<widget field="autonShooterPosition" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="210"/>
-	</widget>
-	<widget field="autonDriveTimeout" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="189"/>
-	</widget>
-	<widget field="autonDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="168"/>
-	</widget>
-	<widget field="auto load catapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="147"/>
-	</widget>
-	<widget field="auto shift enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="126"/>
-	</widget>
-	<widget field="tech trigger axis" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="105"/>
-	</widget>
-	<widget field="draw back catapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="84"/>
-	</widget>
-	<widget field="Is in high gear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="63"/>
-	</widget>
-	<widget field="Arm potentiometer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="42"/>
-	</widget>
-	<widget field="zthrottle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="21"/>
-	</widget>
-	<widget field="joystick deadband" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="241" y="0"/>
-	</widget>
-	<widget field="PPC time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="112" y="0"/>
-	</widget>
-	<widget field="0)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="462"/>
-	</widget>
-	<widget field="Twist" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="441"/>
-	</widget>
-	<widget field="right encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="420"/>
-	</widget>
-	<widget field="shift counter threshold" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="399"/>
-	</widget>
-	<widget field="D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="378"/>
-	</widget>
-	<widget field="shooter pot" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="357"/>
-	</widget>
-	<widget field="I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="336"/>
-	</widget>
-	<widget field="2)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="315"/>
-	</widget>
-	<widget field="Is auto shift enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="294"/>
-	</widget>
-	<widget field="pid gather control enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="273"/>
-	</widget>
-	<widget field="P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="252"/>
-	</widget>
-	<widget field="shift high point" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="231"/>
-	</widget>
-	<widget field="FPGA time" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="210"/>
-	</widget>
-	<widget field="shooter ready" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="189"/>
-	</widget>
-	<widget field="Throttle" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="168"/>
-	</widget>
-	<widget field="shift low point" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="147"/>
+	<widget field="0)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="784" y="16"/>
+		<property name="Background" value="255.204.204.255"/>
 	</widget>
 	<widget field="auton mode" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="126"/>
+		<location x="631" y="16"/>
+		<width>121</width>
+		<height>32</height>
+		<property name="Background" value="255.255.51.255"/>
 	</widget>
-	<widget field="left  encoder" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="105"/>
+	<widget field="pid gather control enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="432" y="144"/>
+		<width>159</width>
+		<height>32</height>
 	</widget>
-	<widget field="shooter low threshold" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="84"/>
+	<widget field="shooter ready" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="432" y="16"/>
+		<width>101</width>
+		<height>32</height>
 	</widget>
-	<widget field="1)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="63"/>
+	<widget field="auto load catapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="432" y="112"/>
+		<width>120</width>
+		<height>32</height>
 	</widget>
-	<widget field="Shooter potentiometer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="42"/>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="288" y="2"/>
+		<width>80</width>
+		<property name="Text" value="GATHERER"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="80" y="0"/>
+		<width>80</width>
+		<height>19</height>
+		<property name="Text" value="SHOOTER"/>
+	</static-widget>
+	<widget field="Shooter Pot Fire Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="665" y="160"/>
+		<width>183</width>
+		<height>32</height>
+	</widget>
+	<widget field="autonStartTime" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="789" y="80"/>
+		<width>139</width>
+		<height>32</height>
+	</widget>
+	<widget field="autonSpeed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="630" y="112"/>
+		<width>122</width>
+		<height>32</height>
+	</widget>
+	<widget field="autonDriveTimeout" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="772" y="112"/>
+		<width>156</width>
+		<height>32</height>
+	</widget>
+	<widget field="autonDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="619" y="80"/>
+		<width>133</width>
+		<height>32</height>
+	</widget>
+	<widget field="Arm potentiometer" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="208" y="17"/>
+		<width>240</width>
+		<height>159</height>
+		<property name="Upper Limit" value="5.0"/>
+		<property name="Tick Interval" value="1.0"/>
 	</widget>
 	<widget field="shooter high threshold" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="21"/>
@@ -123,4 +106,21 @@
 </dashboard>
 <live-window>
 </live-window>
+	<hidden field="PPC time"/>
+	<hidden field="D"/>
+	<hidden field="left  encoder"/>
+	<hidden field="right encoder"/>
+	<hidden field="tech trigger axis"/>
+	<hidden field="shift counter threshold"/>
+	<hidden field="autonWinchTimeout"/>
+	<hidden field="Is in high gear"/>
+	<hidden field="shift low point"/>
+	<hidden field="shooter low threshold"/>
+	<hidden field="shooter high threshold"/>
+	<hidden field="I"/>
+	<hidden field="shooter pot"/>
+	<hidden field="P"/>
+	<hidden field="joystick deadband"/>
+	<hidden field="shift high point"/>
+	<hidden field="Is auto shift enabled"/>
 </xml>
