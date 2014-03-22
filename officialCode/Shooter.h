@@ -17,10 +17,9 @@ public:
 	void stopWinch();
 	void releaseWinch();
 	void engageWinch();
-	void runShooter(bool shootButton);
-	bool isReadyToShoot();
 	bool isWinchEngaged();
 	void toggleAutoLoad();
+	bool isDrawnBack();
 	double POT_MIN;
 	bool autoLoad;
 };

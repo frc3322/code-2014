@@ -28,28 +28,12 @@ void Shooter::toggleAutoLoad() {
 	autoLoad = !autoLoad;
 }
 
-void Shooter::runShooter(bool shootButton) {
-	switch (state) {
-	case DRAWING_BACK:
-		runWinch();
-		engageWinch();
-		if(shooterPot->GetVoltage() < lowThreshold)state = DRAWN_BACK;
-		break;
-	case DRAWN_BACK:
-		stopWinch();
-		engageWinch();
-		if(shootButton)state = SHOOTING;
-		break;
-	case SHOOTING:
-		stopWinch();
-		releaseWinch();
-		if(shooterPot->GetVoltage() > highThreshold)state = DRAWING_BACK;
-		break;
-	}
-}
 bool Shooter::isWinchEngaged() {
 	return trigger->Get() == DoubleSolenoid::kForward;
 }
-bool Shooter::isReadyToShoot() {
-	return state == DRAWN_BACK;
+bool Shooter::isDrawnBack() {
+	if(shooterPot->GetVoltage() < POT_MIN){
+		return true;
+	}
+	return false;
 }

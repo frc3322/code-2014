@@ -129,7 +129,6 @@ public:
 		SmartDashboard::PutNumber("shooter pot", shooterPot.GetVoltage());
 		shooter.highThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter high threshold")),5.0);
 		shooter.lowThreshold = ceiling(fabs(SmartDashboard::GetNumber("shooter low threshold")),5.0);
-		SmartDashboard::PutBoolean("shooter ready",shooter.isReadyToShoot());
 		autonMode = abs((int)SmartDashboard::GetNumber("auton mode"));
 		SmartDashboard::PutNumber("PPC time", Timer::GetPPCTimestamp());
 		SmartDashboard::PutBoolean("auto load catapult",shooter.autoLoad);
@@ -171,17 +170,6 @@ public:
 		drive.ArcadeDrive(0.0,0.0);
 		return true;
 	}
-	bool Robot::driveForwardFast(double distance, double timeout) {
-		double speed = 1.0;
-		double leftDistance = leftEncoder.GetDistance();
-		double rightDistance = rightEncoder.GetDistance();
-		if(leftDistance < distance && rightDistance < distance && Timer::GetPPCTimestamp() < timeout) {
-			drive.ArcadeDrive(-speed,-(leftDistance - rightDistance)*5.5);
-			return false;
-		}
-		drive.ArcadeDrive(0.0,0.0);
-		return true;
-	}
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
 		static const bool hasReachedDestination = true;
@@ -203,11 +191,11 @@ public:
 					timeReachedDestination = Timer::GetPPCTimestamp();
 				}
 				double elapsedTimeAtDestination = Timer::GetPPCTimestamp() - timeReachedDestination;
-				if(elapsedTimeAtDestination > .5 && shooterPot.GetVoltage() <= shooter.POT_MIN && shooter.isWinchEngaged()) {
+				if(elapsedTimeAtDestination > .5 && shooter.isDrawnBack() && shooter.isWinchEngaged()) {
 					shooter.releaseWinch();
 				}
 			}
-			if(shooterPot.GetVoltage() > shooter.POT_MIN) // && Timer::GetPPCTimestamp() < autonStartTime + autonWinchTimeout )
+			if(!shooter.isDrawnBack()) // && Timer::GetPPCTimestamp() < autonStartTime + autonWinchTimeout )
 				shooter.runWinch();
 			else
 				shooter.stopWinch();
@@ -232,21 +220,6 @@ public:
 				shooter.runWinch();
 			else
 				shooter.stopWinch();		
-			break;
-		case 4:
-			if(driveForwardFast(autonDistance, autonStartTime + autonDriveTimeout) == hasReachedDestination) {
-				if(timeReachedDestination == 0) {
-					timeReachedDestination = Timer::GetPPCTimestamp();
-				}
-				double elapsedTimeAtDestination = Timer::GetPPCTimestamp() - timeReachedDestination;
-				if(elapsedTimeAtDestination > 1.0 && shooterPot.GetVoltage() <= shooter.POT_MIN && shooter.isWinchEngaged()) {
-					shooter.releaseWinch();
-				}
-			}
-			if(shooterPot.GetVoltage() > shooter.POT_MIN && Timer::GetPPCTimestamp() < autonStartTime + autonWinchTimeout )
-				shooter.runWinch();
-			else
-				shooter.stopWinch();
 			break;
 		}
 	}
@@ -291,8 +264,8 @@ public:
 			shooter.stopWinch();
 			shooter.releaseWinch();
 			timeOfLastShot = Timer::GetPPCTimestamp();
-		}else if(((shooter.autoLoad && shooterPot.GetVoltage() > shooter.POT_MIN)
-				|| stick.GetRawAxis(Joystick::kTwistAxis) > 0.8) &&  secondsSinceLastShot > 0.5) {//left trigger
+		}
+		else if((shooter.autoLoad && !shooter.isDrawnBack()) || (stick.GetRawAxis(Joystick::kTwistAxis) > 0.8 && secondsSinceLastShot > 0.5)) {//left trigger
 			if(!shooter.isWinchEngaged())
 				shooter.engageWinch();
 			shooter.runWinch();
