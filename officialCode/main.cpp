@@ -172,6 +172,41 @@ public:
 		drive.ArcadeDrive(0.0,0.0);
 		return true;
 	}
+	void Robot::auton4() {
+		static bool hasGoneForward = false;
+		static bool hasShot = false;
+		static double timeOfShot = 0.0;
+		static bool hasGatheredSecond = false;
+		static double timeGatheringWasStarted = 0.0;
+		if(!hasGoneForward) {
+			shooter.engageWinch();
+			if(!shooter.isDrawnBack())
+				shooter.runWinch();
+			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
+			hasGoneForward = driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
+		}
+//		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.5) {
+//			shooter.releaseWinch();
+//			if(!hasShot) {
+//				hasShot = true;
+//				timeOfShot = Timer::GetPPCTimestamp();
+//			}
+//		}else if (!hasGatheredSecond) {
+//			if(!shooter.isWinchEngaged())
+//				shooter.engageWinch();
+//			if(!shooter.isDrawnBack())
+//				shooter.runWinch();
+//			gatherer.rollerControl(1.0);
+//			if(timeGatheringWasStarted == 0.0) {
+//				gatherer.setArmAngle(gatherer.DOWN_POSITION);
+//				timeGatheringWasStarted = Timer::GetPPCTimestamp();
+//			}else if(Timer::GetPPCTimestamp() > timeGatheringWasStarted + 1.0 && shooter.isDrawnBack()) {
+//				hasGatheredSecond = true;
+//			}
+//		}else {
+//			shooter.releaseWinch();
+//		}
+	}
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
 		static const bool hasReachedDestination = true;
@@ -222,6 +257,9 @@ public:
 				shooter.runWinch();
 			else
 				shooter.stopWinch();		
+			break;
+		case 4:
+			auton4();
 			break;
 		}
 	}
@@ -308,6 +346,7 @@ public:
 		if(TECH_XBUTTON_CURRENT && !TECH_XBUTTON_PREVIOUS) {
 			drive.toogleAutoShiftEnable();
 		}
+		TECH_XBUTTON_PREVIOUS = TECH_XBUTTON_CURRENT;
 		PrintInfoToSmartDashboard();
 	}
 };
