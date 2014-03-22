@@ -6,7 +6,7 @@ Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armCon
 		#if ROBOT == COMP
 		FORWARD_POSITION(3.24), BACKWARD_POSITION(2.24), UP_POSITION(2.58), DOWN_POSITION(3.5)
 		#else
-		FORWARD_POSITION(2.34), BACKWARD_POSITION(3.7), UP_POSITION(3.0), DOWN_POSITION(1.8)
+		FORWARD_POSITION(3.4), BACKWARD_POSITION(4.8), UP_POSITION(4.25), DOWN_POSITION(3.0)
 #endif
 {
 	armAngle->SetVoltageForPID(true);

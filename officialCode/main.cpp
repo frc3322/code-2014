@@ -66,7 +66,7 @@ public:
 #if ROBOT==COMP
 		P(-1.2), I(-0.01), D(0.3),
 #else
-		P(1.0), I(0.01), D(0.5),
+		P(4.0), I(0.01), D(4.0),
 #endif
 		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.7), autonDriveTimeout(10.0), autonWinchTimeout(5.0)
 	{
@@ -157,7 +157,7 @@ public:
 		drive.shiftLowGear();
 		autonStartTime = Timer::GetPPCTimestamp();
 		shooter.engageWinch();
-		gatherer.setPIDEnabled(false);
+		gatherer.setPIDEnabled(autonMode == 4);
 
 	}
 	bool Robot::driveForward(double distance, double speed, double timeout) {
@@ -178,34 +178,48 @@ public:
 		static double timeOfShot = 0.0;
 		static bool hasGatheredSecond = false;
 		static double timeGatheringWasStarted = 0.0;
+		static double timeDrawnBack = 0.0;
+		static double timeOfStart = Timer::GetPPCTimestamp();
 		if(!hasGoneForward) {
 			shooter.engageWinch();
 			if(!shooter.isDrawnBack())
 				shooter.runWinch();
+			else {
+				//should have a check!
+				shooter.stopWinch();
+			}
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 			hasGoneForward = driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
 		}
-//		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.5) {
-//			shooter.releaseWinch();
-//			if(!hasShot) {
-//				hasShot = true;
-//				timeOfShot = Timer::GetPPCTimestamp();
-//			}
-//		}else if (!hasGatheredSecond) {
-//			if(!shooter.isWinchEngaged())
-//				shooter.engageWinch();
-//			if(!shooter.isDrawnBack())
-//				shooter.runWinch();
-//			gatherer.rollerControl(1.0);
-//			if(timeGatheringWasStarted == 0.0) {
-//				gatherer.setArmAngle(gatherer.DOWN_POSITION);
-//				timeGatheringWasStarted = Timer::GetPPCTimestamp();
-//			}else if(Timer::GetPPCTimestamp() > timeGatheringWasStarted + 1.0 && shooter.isDrawnBack()) {
-//				hasGatheredSecond = true;
-//			}
-//		}else {
-//			shooter.releaseWinch();
-//		}
+		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.5) {
+			shooter.releaseWinch();
+			if(!hasShot) {
+				hasShot = true;
+				timeOfShot = Timer::GetPPCTimestamp();
+			}
+		}
+			else if (!hasGatheredSecond) {
+			if(!shooter.isWinchEngaged())
+				shooter.engageWinch();
+			if(!shooter.isDrawnBack())
+				shooter.runWinch();
+			else {
+				//should have a check
+				shooter.stopWinch();
+			}
+			if(Timer::GetPPCTimestamp() > timeOfShot + 1.5) {
+				//opposite on comp
+				gatherer.rollerControl(-1.0);
+			}
+			if(Timer::GetPPCTimestamp() > timeGatheringWasStarted + 1.0 && shooter.isDrawnBack()) {
+				hasGatheredSecond = true;
+				timeDrawnBack = Timer::GetPPCTimestamp();
+			}
+		}else if(Timer::GetPPCTimestamp() > timeDrawnBack + 2) {
+			shooter.releaseWinch();
+			//untested as of 3/22 5:30pm
+			shooter.stopWinch();
+		}
 	}
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
