@@ -88,8 +88,6 @@ public:
 		SmartDashboard::PutNumber("P",P);
 		SmartDashboard::PutNumber("I",I);
 		SmartDashboard::PutNumber("D",D);
-		SmartDashboard::PutNumber("shooter low threshold",shooter.lowThreshold);
-		SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 		SmartDashboard::PutNumber("auton mode", autonMode);
 		SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
 		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
@@ -268,14 +266,16 @@ public:
 		drive.shiftAutomatically();
 		float moveValue = stick.GetAxis(Joystick::kYAxis);
 		float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
-		TECH_BACK_CURRENT = tech.GetRawButton(XBOX::BACK);
-		if(TECH_BACK_CURRENT && !TECH_BACK_PREVIOUS) {
-			shooter.toggleAutoLoad();
-		}
-		TECH_BACK_PREVIOUS = TECH_BACK_CURRENT;
+		float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);
 		//deadband for joystick
 		if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
 		if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
+		TECH_BACK_CURRENT = tech.GetRawButton(XBOX::BACK);
+		TECH_YBUTTON_CURRENT = tech.GetRawButton(XBOX::YBUTTON);
+		TECH_XBUTTON_CURRENT = tech.GetRawButton(XBOX::XBUTTON);
+		if(TECH_BACK_CURRENT && !TECH_BACK_PREVIOUS) {
+			shooter.toggleAutoLoad();
+		}
 		//drive code
 		drive.ArcadeDrive(moveValue,rotateValue);
 		//run roller
@@ -299,7 +299,6 @@ public:
 		}else {
 			shooter.stopWinch();
 		}
-		float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);
 		if(fabs(gatherControl) > 0.03) {
 			//should pid control be disabled? or should setpoint be updated
 			arm.Set(gatherControl * 0.5); //Manual Gatherer control
@@ -321,20 +320,17 @@ public:
 		if(tech.GetRawButton(XBOX::BBUTTON)) {
 			gatherer.setDownPosition(gathererPot.GetVoltage());
 		}
-
 		//disabling PID gatherer control
-		TECH_YBUTTON_CURRENT = tech.GetRawButton(XBOX::YBUTTON);
 		if(TECH_YBUTTON_CURRENT && !TECH_YBUTTON_PREVIOUS) {
 			gatherer.togglePIDEnabled();
 			//we could set a default position
 		}
-		TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
-
 		//toggle autoshift enable
-		TECH_XBUTTON_CURRENT = tech.GetRawButton(XBOX::XBUTTON);
 		if(TECH_XBUTTON_CURRENT && !TECH_XBUTTON_PREVIOUS) {
 			drive.toogleAutoShiftEnable();
 		}
+		TECH_BACK_PREVIOUS = TECH_BACK_CURRENT;
+		TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
 		PrintInfoToSmartDashboard();
 	}
 };
