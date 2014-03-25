@@ -20,6 +20,7 @@ public:
 	bool isWinchEngaged();
 	void toggleAutoLoad();
 	bool isDrawnBack();
+	bool isPastDeadband();
 	double POT_MIN;
 	bool autoLoad;
 };

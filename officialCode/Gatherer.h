@@ -20,9 +20,9 @@ class Gatherer {
 		void setPIDEnabled(bool value);
 		void togglePIDEnabled();
 		void setDownPosition(double downPos);
-		const double FORWARD_POSITION;
-		const double BACKWARD_POSITION;
-		const double UP_POSITION;
-		const double DOWN_POSITION;
+		double FORWARD_POSITION;
+		double BACKWARD_POSITION;
+		double UP_POSITION;
+		double DOWN_POSITION;
 };
 #endif

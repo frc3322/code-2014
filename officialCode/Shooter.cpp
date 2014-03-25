@@ -4,7 +4,7 @@
 
 Shooter::Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger):
 winch(winch), shooterPot(shooterPot), trigger(trigger), state(DRAWING_BACK), 
-highThreshold(2.4), lowThreshold(1.0), POT_MIN(1.3), autoLoad(false)
+highThreshold(2.4), lowThreshold(1.0), POT_MIN(2.0), autoLoad(false)
 {
 	trigger->Set(DoubleSolenoid::kForward);
 }
@@ -36,4 +36,12 @@ bool Shooter::isDrawnBack() {
 		return true;
 	}
 	return false;
+}
+bool Shooter::isPastDeadband() {
+	float shooterDeadband = 0.15;
+	if(shooterPot->GetVoltage() < POT_MIN - shooterDeadband) {
+		return true;
+	}
+	else
+		return false;
 }

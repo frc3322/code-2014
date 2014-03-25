@@ -40,6 +40,13 @@ class Robot : public IterativeRobot
 	double autonDriveTimeout;
 	double timeOfLastShot;
 	double autonWinchTimeout;
+	//atuon variables
+	bool hasGoneForward;
+	bool hasShot;
+	double timeOfShot;
+	bool readyForSecondBall;
+	double timeDrawnBack;
+	double timeOfStart;
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -64,11 +71,11 @@ public:
 		shooter(&winch, &shooterPot, &trigger),
 		deadbandWidth(0.01),
 #if ROBOT==COMP
-		P(-1.2), I(-0.01), D(0.3),
+		P(-6.00), I(-0.01),D(-4.00),
 #else
 		P(4.0), I(0.01), D(4.0),
 #endif
-		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.7), autonDriveTimeout(10.0), autonWinchTimeout(5.0)
+		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.8), autonDriveTimeout(10.0), autonWinchTimeout(5.0)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -93,6 +100,11 @@ public:
 		SmartDashboard::PutNumber("auton mode", autonMode);
 		SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
 		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
+		SmartDashboard::PutNumber("Gatherer Down Position", gatherer.DOWN_POSITION);
+		SmartDashboard::PutNumber("Gatherer Forward Position", gatherer.FORWARD_POSITION);
+		SmartDashboard::PutNumber("Gatherer Up Position", gatherer.UP_POSITION);
+		SmartDashboard::PutNumber("Gatherer Back Position", gatherer.BACKWARD_POSITION);
+
 		char label[3];
 		label[0] = '0';
 		label[1] = ')';
@@ -101,6 +113,7 @@ public:
 				"Drive to low goal",
 				"Drive to low goal and reverse gatherer to feed ball into low goal",
 				"Drive, pull down shooter, fire"
+				"Drive, shoot, gather, shoot again"
 		};
 		for(unsigned int i = 0; i < sizeof(descriptions)/sizeof(const char*); i++){
 			SmartDashboard::PutString(label,descriptions[i]);
@@ -118,7 +131,7 @@ public:
 		//drive.setAutoShiftEnable(SmartDashboard::GetBoolean("Is auto shift enabled"));
 		SmartDashboard::PutBoolean("auto shift enabled", drive.isAutoShiftEnabled());
 		SmartDashboard::PutNumber("Shooter potentiometer", shooterPot.GetVoltage());
-		SmartDashboard::PutBoolean("Is in high gear", drive.isInHighGear());
+		SmartDashboard::PutBoolean("high gear", drive.isInHighGear());
 		SmartDashboard::PutNumber("Arm potentiometer", gathererPot.GetVoltage());
 		deadbandWidth = fabs(SmartDashboard::GetNumber("joystick deadband"));
 		drive.shiftHighPoint = fabs(SmartDashboard::GetNumber("shift high point"));
@@ -141,6 +154,11 @@ public:
 		autonDriveTimeout = fabs(SmartDashboard::GetNumber("autonDriveTimeout"));
 		autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
 		shooter.POT_MIN = SmartDashboard::GetNumber("Shooter Pot Fire Position");
+		gatherer.DOWN_POSITION = SmartDashboard::GetNumber("Gatherer Down Position");
+		gatherer.FORWARD_POSITION = SmartDashboard::GetNumber("Gatherer Forward Position");
+		gatherer.UP_POSITION = SmartDashboard::GetNumber("Gatherer Up Position");
+		gatherer.BACKWARD_POSITION = SmartDashboard::GetNumber("Gatherer Back Position");
+		
 		SmartDashboard::PutNumber("left  encoder speed",leftEncoder.GetRate());
 		SmartDashboard::PutNumber("right encoder speed",rightEncoder.GetRate());
 
@@ -160,6 +178,12 @@ public:
 		autonStartTime = Timer::GetPPCTimestamp();
 		shooter.engageWinch();
 		gatherer.setPIDEnabled(autonMode == 4);
+		hasGoneForward = false;
+		hasShot = false;
+		timeOfShot = 0.0;
+		readyForSecondBall = false;
+		timeDrawnBack = 0.0;
+		timeOfStart = Timer::GetPPCTimestamp();
 
 	}
 	bool Robot::driveForward(double distance, double speed, double timeout) {
@@ -174,50 +198,42 @@ public:
 		drive.ArcadeDrive(0.0,0.0);
 		return true;
 	}
-	void Robot::auton4() {
-		static bool hasGoneForward = false;
-		static bool hasShot = false;
-		static double timeOfShot = 0.0;
-		static bool hasGatheredSecond = false;
-		static double timeGatheringWasStarted = 0.0;
-		static double timeDrawnBack = 0.0;
-		static double timeOfStart = Timer::GetPPCTimestamp();
-		if(!hasGoneForward) {
+	void Robot::drawBackShooter() {
+		if(!shooter.isDrawnBack()) { 
 			shooter.engageWinch();
-			if(!shooter.isDrawnBack())
-				shooter.runWinch();
-			else {
-				//should have a check!
-				shooter.stopWinch();
-			}
+			shooter.runWinch();
+		}
+		else {
+			//should have a check!
+			shooter.stopWinch();
+		}
+	}
+	void Robot::auton4() {
+		//reduced wait times, needs testing
+		if(!hasGoneForward) {
+			drawBackShooter();
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 			hasGoneForward = driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
 		}
-		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.5) {
+		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.25) {
 			shooter.releaseWinch();
 			if(!hasShot) {
 				hasShot = true;
 				timeOfShot = Timer::GetPPCTimestamp();
 			}
 		}
-			else if (!hasGatheredSecond) {
-			if(!shooter.isWinchEngaged())
-				shooter.engageWinch();
-			if(!shooter.isDrawnBack())
-				shooter.runWinch();
-			else {
-				//should have a check
-				shooter.stopWinch();
-			}
-			if(Timer::GetPPCTimestamp() > timeOfShot + 1.5) {
+		else if (!readyForSecondBall) {
+			drawBackShooter();
+			if(Timer::GetPPCTimestamp() > timeOfShot + 0.5) {
 				//opposite on comp
-				gatherer.rollerControl(-1.0);
+				gatherer.rollerControl(1.0);
 			}
-			if(Timer::GetPPCTimestamp() > timeGatheringWasStarted + 1.0 && shooter.isDrawnBack()) {
-				hasGatheredSecond = true;
+			if(shooter.isDrawnBack()) {
+				readyForSecondBall = true;
 				timeDrawnBack = Timer::GetPPCTimestamp();
 			}
-		}else if(Timer::GetPPCTimestamp() > timeDrawnBack + 2) {
+		}
+		else if(Timer::GetPPCTimestamp() > timeDrawnBack + 1.5) {
 			shooter.releaseWinch();
 			//untested as of 3/22 5:30pm
 			shooter.stopWinch();
@@ -226,8 +242,6 @@ public:
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
 		static const bool hasReachedDestination = true;
-		static bool hasShot = false;
-		static bool hasGathered = false;
 		static double timeReachedDestination = 0;
 		switch (autonMode) {
 		case 0:	//Drive to low goal
@@ -243,36 +257,21 @@ public:
 				if(timeReachedDestination == 0) {
 					timeReachedDestination = Timer::GetPPCTimestamp();
 				}
+				
 				double elapsedTimeAtDestination = Timer::GetPPCTimestamp() - timeReachedDestination;
-				if(elapsedTimeAtDestination > .5 && shooter.isDrawnBack() && shooter.isWinchEngaged()) {
+				if(elapsedTimeAtDestination > 2.0 && shooter.isDrawnBack() && shooter.isWinchEngaged() && timeOfShot == 0.0) {
 					shooter.releaseWinch();
+					timeOfShot = Timer::GetPPCTimestamp();
 				}
 			}
-			if(!shooter.isDrawnBack()) // && Timer::GetPPCTimestamp() < autonStartTime + autonWinchTimeout )
+			if(!shooter.isDrawnBack()) {
+				if(!shooter.isWinchEngaged() && Timer::GetPPCTimestamp() > timeOfShot + 0.5 ) {
+					shooter.engageWinch();
+				}
 				shooter.runWinch();
+			}
 			else
 				shooter.stopWinch();
-			break;
-		case 3:
-			///needs testing
-			if(!hasShot) {
-				shooter.releaseWinch();
-				hasShot = true;
-			}
-			if(!hasGathered) {
-				gatherer.setArmAngle(gatherer.FORWARD_POSITION);
-				gatherer.rollerControl(1.0);
-				if(driveForward(2,autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination) {
-					if(Timer::GetPPCTimestamp() > autonStartTime + 3.0)
-						hasGathered = true;
-				}
-			} else {
-				driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
-			}
-			if(shooterPot.GetVoltage() > shooter.POT_MIN)
-				shooter.runWinch();
-			else
-				shooter.stopWinch();		
 			break;
 		case 4:
 			auton4();
@@ -290,7 +289,7 @@ public:
 		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
 		static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
 		static bool TECH_XBUTTON_PREVIOUS = false, TECH_XBUTTON_CURRENT;
-
+		
 		drive.takeSpeedSample();
 		drive.shiftAutomatically();
 		float moveValue = stick.GetAxis(Joystick::kYAxis);
@@ -323,7 +322,7 @@ public:
 			if(!shooter.isWinchEngaged())
 				shooter.engageWinch();
 			shooter.runWinch();
-		}else {
+		}else if(!shooter.autoLoad || shooter.isPastDeadband()){
 			shooter.stopWinch();
 		}
 		float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);

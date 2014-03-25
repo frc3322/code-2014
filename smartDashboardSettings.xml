@@ -1,14 +1,42 @@
 <xml version="1.0">
 <dashboard>
-	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Image">
-		<location x="720" y="224"/>
-		<width>302</width>
-		<height>184</height>
-		<property name="Image File" value="C:\Users\FRC 3322-04\Downloads\Flag-Alpha.png"/>
-		<property name="Maintain Aspect Ratio" value="true"/>
+	<widget field="shooter ready" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="450" y="64"/>
+		<width>110</width>
+		<height>30</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="272" y="338"/>
+		<width>112</width>
+		<property name="Text" value="RIGHT SPEED"/>
 	</static-widget>
+	<widget field="Is in high gear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
+		<location x="448" y="112"/>
+		<width>101</width>
+		<height>32</height>
+	</widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="48" y="338"/>
+		<width>128</width>
+		<height>14</height>
+		<property name="Text" value="LEFT SPEED"/>
+	</static-widget>
+	<widget field="right encoder speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="208" y="176"/>
+		<width>240</width>
+		<height>160</height>
+		<property name="Upper Limit" value="20.0"/>
+		<property name="Tick Interval" value="1.0"/>
+	</widget>
+	<widget field="left  encoder speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
+		<location x="0" y="176"/>
+		<width>240</width>
+		<height>160</height>
+		<property name="Upper Limit" value="20.0"/>
+		<property name="Tick Interval" value="1.0"/>
+	</widget>
 	<widget field="auto shift enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="432" y="80"/>
+		<location x="448" y="192"/>
 		<width>120</width>
 		<height>32</height>
 	</widget>
@@ -19,20 +47,6 @@
 		<property name="Upper Limit" value="5.0"/>
 		<property name="Tick Interval" value="1.0"/>
 	</widget>
-	<widget field="2)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="784" y="48"/>
-		<width>179</width>
-		<property name="Background" value="204.255.204.255"/>
-	</widget>
-	<widget field="1)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="784" y="32"/>
-		<width>231</width>
-		<property name="Background" value="255.255.204.255"/>
-	</widget>
-	<widget field="0)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
-		<location x="784" y="16"/>
-		<property name="Background" value="255.204.204.255"/>
-	</widget>
 	<widget field="auton mode" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="631" y="16"/>
 		<width>121</width>
@@ -40,17 +54,12 @@
 		<property name="Background" value="255.255.51.255"/>
 	</widget>
 	<widget field="pid gather control enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="432" y="144"/>
+		<location x="448" y="288"/>
 		<width>159</width>
 		<height>32</height>
 	</widget>
-	<widget field="shooter ready" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="432" y="16"/>
-		<width>101</width>
-		<height>32</height>
-	</widget>
 	<widget field="auto load catapult" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
-		<location x="432" y="112"/>
+		<location x="448" y="240"/>
 		<width>120</width>
 		<height>32</height>
 	</widget>
@@ -100,9 +109,6 @@
 	<widget field="shooter high threshold" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
 		<location x="0" y="21"/>
 	</widget>
-	<widget field="zAxis" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="0" y="0"/>
-	</widget>
 </dashboard>
 <live-window>
 </live-window>
@@ -113,14 +119,16 @@
 	<hidden field="tech trigger axis"/>
 	<hidden field="shift counter threshold"/>
 	<hidden field="autonWinchTimeout"/>
-	<hidden field="Is in high gear"/>
 	<hidden field="shift low point"/>
 	<hidden field="shooter low threshold"/>
-	<hidden field="shooter high threshold"/>
+	<hidden field="0)"/>
 	<hidden field="I"/>
 	<hidden field="shooter pot"/>
+	<hidden field="1)"/>
 	<hidden field="P"/>
+	<hidden field="2)"/>
 	<hidden field="joystick deadband"/>
+	<hidden field="zAxis"/>
 	<hidden field="shift high point"/>
 	<hidden field="Is auto shift enabled"/>
 </xml>
