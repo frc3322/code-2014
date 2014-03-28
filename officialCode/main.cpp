@@ -47,6 +47,10 @@ class Robot : public IterativeRobot
 	bool readyForSecondBall;
 	double timeDrawnBack;
 	double timeOfStart;
+	double timeReachedDestination;
+	bool TECH_BACK_PREVIOUS, TECH_BACK_CURRENT, TECH_YBUTTON_PREVIOUS, TECH_YBUTTON_CURRENT;
+	bool TECH_XBUTTON_PREVIOUS, TECH_XBUTTON_CURRENT;
+
 public:
 	Robot():
 		left1(1), left2(2), left3(3), right1(4), right2(5), right3(6),
@@ -75,7 +79,8 @@ public:
 #else
 		P(4.0), I(0.01), D(4.0),
 #endif
-		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.8), autonDriveTimeout(10.0), autonWinchTimeout(5.0)
+		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.8), autonDriveTimeout(10.0), autonWinchTimeout(5.0),
+		timeReachedDestination(0.0)
 	{
 		drive.SetExpiration(0.1);
 		this->SetPeriod(0);
@@ -184,7 +189,7 @@ public:
 		readyForSecondBall = false;
 		timeDrawnBack = 0.0;
 		timeOfStart = Timer::GetPPCTimestamp();
-
+		timeReachedDestination = 0.0;
 	}
 	bool Robot::driveForward(double distance, double speed, double timeout) {
 		double leftDistance = leftEncoder.GetDistance();
@@ -241,19 +246,17 @@ public:
 	}
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
-		static const bool hasReachedDestination = true;
-		static double timeReachedDestination = 0;
 		switch (autonMode) {
 		case 0:	//Drive to low goal
 			driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout);
 			break;
 		case 1:	//Drive to low goal and reverse gatherer to feed ball into low goal
 			gatherer.setArmAngle(gatherer.BACKWARD_POSITION);		//pull back gatherer arm
-			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination)//drive forward to low goal
+			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout))//drive forward to low goal - returns true at destination
 				gatherer.rollerControl(-1);		//run rollers to put ball in low goal
 			break;
 		case 2:
-			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout) == hasReachedDestination) {
+			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout)) {
 				if(timeReachedDestination == 0) {
 					timeReachedDestination = Timer::GetPPCTimestamp();
 				}
@@ -284,11 +287,14 @@ public:
 		timeOfLastShot = Timer::GetPPCTimestamp();
 		gatherer.setPIDEnabled(false);
 		gatherer.setArmAngle(gatherer.FORWARD_POSITION);
+		TECH_BACK_PREVIOUS = false;
+		TECH_YBUTTON_PREVIOUS = false;
+		TECH_XBUTTON_PREVIOUS = false;
 	}
 	void Robot::TeleopPeriodic() {
-		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
-		static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
-		static bool TECH_XBUTTON_PREVIOUS = false, TECH_XBUTTON_CURRENT;
+//		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
+//		static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
+//		static bool TECH_XBUTTON_PREVIOUS = false, TECH_XBUTTON_CURRENT;
 		
 		drive.takeSpeedSample();
 		drive.shiftAutomatically();
