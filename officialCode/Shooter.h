@@ -9,6 +9,7 @@ class Shooter {
 	AnalogChannel *shooterPot;
 	DoubleSolenoid *trigger;
 	enum {DRAWN_BACK, DRAWING_BACK, SHOOTING} state;
+	bool _isDrawnBack;
 public:
 	double highThreshold;
 	double lowThreshold;
@@ -20,8 +21,7 @@ public:
 	bool isWinchEngaged();
 	void toggleAutoLoad();
 	bool isDrawnBack();
-	bool isPastDeadband();
-	double POT_MIN;
+	double SHOOT_POSITION;
 	bool autoLoad;
 };
 #endif

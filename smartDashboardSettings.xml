@@ -1,5 +1,41 @@
 <xml version="1.0">
 <dashboard>
+	<widget field="Gatherer Up Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="500"/>
+	</widget>
+	<widget field="Gatherer Forward Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="479"/>
+	</widget>
+	<widget field="Gatherer Down Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="458"/>
+	</widget>
+	<widget field="Gatherer Back Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="437"/>
+	</widget>
+	<widget field="high gear" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="416"/>
+	</widget>
+	<widget field="2)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="752" y="48"/>
+		<width>176</width>
+	</widget>
+	<widget field="1)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="752" y="32"/>
+		<width>176</width>
+	</widget>
+	<widget field="0)" type="String" class="edu.wpi.first.smartdashboard.gui.elements.FormattedField">
+		<location x="752" y="16"/>
+		<width>176</width>
+	</widget>
+	<widget field="D" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="395"/>
+	</widget>
+	<widget field="I" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="374"/>
+	</widget>
+	<widget field="P" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
+		<location x="0" y="353"/>
+	</widget>
 	<widget field="shooter ready" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="450" y="64"/>
 		<width>110</width>
@@ -25,15 +61,17 @@
 		<location x="208" y="176"/>
 		<width>240</width>
 		<height>160</height>
-		<property name="Upper Limit" value="20.0"/>
-		<property name="Tick Interval" value="1.0"/>
+		<property name="Upper Limit" value="9000.0"/>
+		<property name="Lower Limit" value="-9000.0"/>
+		<property name="Tick Interval" value="1000.0"/>
 	</widget>
 	<widget field="left  encoder speed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.SimpleDial">
 		<location x="0" y="176"/>
 		<width>240</width>
 		<height>160</height>
-		<property name="Upper Limit" value="20.0"/>
-		<property name="Tick Interval" value="1.0"/>
+		<property name="Upper Limit" value="9000.0"/>
+		<property name="Lower Limit" value="-9000.0"/>
+		<property name="Tick Interval" value="1000.0"/>
 	</widget>
 	<widget field="auto shift enabled" type="Boolean" class="edu.wpi.first.smartdashboard.gui.elements.BooleanBox">
 		<location x="448" y="192"/>
@@ -48,7 +86,7 @@
 		<property name="Tick Interval" value="1.0"/>
 	</widget>
 	<widget field="auton mode" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="631" y="16"/>
+		<location x="615" y="64"/>
 		<width>121</width>
 		<height>32</height>
 		<property name="Background" value="255.255.51.255"/>
@@ -75,27 +113,27 @@
 		<property name="Text" value="SHOOTER"/>
 	</static-widget>
 	<widget field="Shooter Pot Fire Position" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="665" y="160"/>
+		<location x="633" y="176"/>
 		<width>183</width>
 		<height>32</height>
 	</widget>
 	<widget field="autonStartTime" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="789" y="80"/>
+		<location x="757" y="112"/>
 		<width>139</width>
 		<height>32</height>
 	</widget>
 	<widget field="autonSpeed" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="630" y="112"/>
+		<location x="614" y="144"/>
 		<width>122</width>
 		<height>32</height>
 	</widget>
 	<widget field="autonDriveTimeout" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="772" y="112"/>
+		<location x="740" y="144"/>
 		<width>156</width>
 		<height>32</height>
 	</widget>
 	<widget field="autonDistance" type="Number" class="edu.wpi.first.smartdashboard.gui.elements.TextBox">
-		<location x="619" y="80"/>
+		<location x="603" y="112"/>
 		<width>133</width>
 		<height>32</height>
 	</widget>
@@ -113,7 +151,6 @@
 <live-window>
 </live-window>
 	<hidden field="PPC time"/>
-	<hidden field="D"/>
 	<hidden field="left  encoder"/>
 	<hidden field="right encoder"/>
 	<hidden field="tech trigger axis"/>
@@ -121,12 +158,7 @@
 	<hidden field="autonWinchTimeout"/>
 	<hidden field="shift low point"/>
 	<hidden field="shooter low threshold"/>
-	<hidden field="0)"/>
-	<hidden field="I"/>
 	<hidden field="shooter pot"/>
-	<hidden field="1)"/>
-	<hidden field="P"/>
-	<hidden field="2)"/>
 	<hidden field="joystick deadband"/>
 	<hidden field="zAxis"/>
 	<hidden field="shift high point"/>

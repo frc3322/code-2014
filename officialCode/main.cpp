@@ -99,7 +99,7 @@ public:
 		SmartDashboard::PutNumber("shooter high threshold",shooter.highThreshold);
 		SmartDashboard::PutNumber("auton mode", autonMode);
 		SmartDashboard::PutBoolean("pid gather control enabled",gatherer.isPIDEnabled());
-		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.POT_MIN);
+		SmartDashboard::PutNumber("Shooter Pot Fire Position", shooter.SHOOT_POSITION);
 		SmartDashboard::PutNumber("Gatherer Down Position", gatherer.DOWN_POSITION);
 		SmartDashboard::PutNumber("Gatherer Forward Position", gatherer.FORWARD_POSITION);
 		SmartDashboard::PutNumber("Gatherer Up Position", gatherer.UP_POSITION);
@@ -153,7 +153,7 @@ public:
 		autonSpeed = SmartDashboard::GetNumber("autonSpeed");
 		autonDriveTimeout = fabs(SmartDashboard::GetNumber("autonDriveTimeout"));
 		autonWinchTimeout = fabs(SmartDashboard::GetNumber("autonWinchTimeout"));
-		shooter.POT_MIN = SmartDashboard::GetNumber("Shooter Pot Fire Position");
+		shooter.SHOOT_POSITION = SmartDashboard::GetNumber("Shooter Pot Fire Position");
 		gatherer.DOWN_POSITION = SmartDashboard::GetNumber("Gatherer Down Position");
 		gatherer.FORWARD_POSITION = SmartDashboard::GetNumber("Gatherer Forward Position");
 		gatherer.UP_POSITION = SmartDashboard::GetNumber("Gatherer Up Position");
@@ -322,7 +322,7 @@ public:
 			if(!shooter.isWinchEngaged())
 				shooter.engageWinch();
 			shooter.runWinch();
-		}else if(!shooter.autoLoad || shooter.isPastDeadband()){
+		}else {
 			shooter.stopWinch();
 		}
 		float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);
