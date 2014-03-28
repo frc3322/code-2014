@@ -15,6 +15,7 @@ double floor(double a, double f) {
 }
 class Robot : public IterativeRobot
 {
+	
 	Talon left1, left2, left3, right1, right2, right3;
 	Talon winch;
 	Talon arm, roller;
@@ -190,6 +191,7 @@ public:
 		timeDrawnBack = 0.0;
 		timeOfStart = Timer::GetPPCTimestamp();
 		timeReachedDestination = 0.0;
+		compressor.Start();
 	}
 	bool Robot::driveForward(double distance, double speed, double timeout) {
 		double leftDistance = leftEncoder.GetDistance();
@@ -257,18 +259,18 @@ public:
 			break;
 		case 2:
 			if(driveForward(autonDistance, autonSpeed, autonStartTime + autonDriveTimeout)) {
-				if(timeReachedDestination == 0) {
+				if(timeReachedDestination < 1.0) {
 					timeReachedDestination = Timer::GetPPCTimestamp();
 				}
 				
 				double elapsedTimeAtDestination = Timer::GetPPCTimestamp() - timeReachedDestination;
-				if(elapsedTimeAtDestination > 2.0 && shooter.isDrawnBack() && shooter.isWinchEngaged() && timeOfShot == 0.0) {
+				if(elapsedTimeAtDestination > 2.0 && shooter.isDrawnBack() && shooter.isWinchEngaged() && timeOfShot < 1.0) {
 					shooter.releaseWinch();
 					timeOfShot = Timer::GetPPCTimestamp();
 				}
 			}
 			if(!shooter.isDrawnBack()) {
-				if(!shooter.isWinchEngaged() && Timer::GetPPCTimestamp() > timeOfShot + 0.5 ) {
+				if(!shooter.isWinchEngaged() && (timeOfShot < 1.0 || Timer::GetPPCTimestamp() > timeOfShot + 0.5)) {
 					shooter.engageWinch();
 				}
 				shooter.runWinch();
@@ -290,6 +292,8 @@ public:
 		TECH_BACK_PREVIOUS = false;
 		TECH_YBUTTON_PREVIOUS = false;
 		TECH_XBUTTON_PREVIOUS = false;
+		compressor.Start();
+		shooter.autoLoad = true;
 	}
 	void Robot::TeleopPeriodic() {
 //		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;

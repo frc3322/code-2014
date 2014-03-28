@@ -4,7 +4,7 @@
 Gatherer::Gatherer(Talon *roller, AnalogChannel *armAngle, PIDController *armController, double offset):
 		roller(roller), armAngle(armAngle), armController(armController), pidEnabled(false),offset(offset),
 		#if ROBOT == COMP
-		FORWARD_POSITION(3.73), BACKWARD_POSITION(2.75), UP_POSITION(3.1), DOWN_POSITION(4.0)
+		FORWARD_POSITION(3.97), BACKWARD_POSITION(3.00), UP_POSITION(3.35), DOWN_POSITION(4.26)
 		#else
 		FORWARD_POSITION(3.4), BACKWARD_POSITION(4.8), UP_POSITION(4.25), DOWN_POSITION(3.0)
 #endif
@@ -30,8 +30,10 @@ void Gatherer::setDownPosition(double downPos) {
 }
 void Gatherer::setPIDEnabled(bool value) {
 	pidEnabled = value;
-	if(pidEnabled)
+	if(pidEnabled) {
 		armController->Enable();
+		this->setArmAngle(this->FORWARD_POSITION);
+	}
 	else
 		armController->Disable();
 }
