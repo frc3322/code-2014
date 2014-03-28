@@ -79,7 +79,7 @@ public:
 #else
 		P(4.0), I(0.01), D(4.0),
 #endif
-		autonMode(2), autonStartTime(0.0), autonDistance(15.20), autonSpeed(0.8), autonDriveTimeout(10.0), autonWinchTimeout(5.0),
+		autonMode(2), autonStartTime(0.0), autonDistance(16.0), autonSpeed(0.8), autonDriveTimeout(10.0), autonWinchTimeout(5.0),
 		timeReachedDestination(0.0)
 	{
 		drive.SetExpiration(0.1);
