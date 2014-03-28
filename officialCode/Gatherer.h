@@ -20,6 +20,7 @@ class Gatherer {
 		void setPIDEnabled(bool value);
 		void togglePIDEnabled();
 		void setDownPosition(double downPos);
+		bool isRolling();		
 		const double FORWARD_POSITION;
 		const double BACKWARD_POSITION;
 		const double UP_POSITION;

@@ -223,8 +223,17 @@ public:
 			shooter.stopWinch();
 		}
 	}
+	
+	void Robot::autonLEDs() {
+		DigitalOutput pin1(1), pin2(2), pin3(3);
+		pin1.Set(1);
+		pin2.Set(0);
+		pin3.Set(0);
+	}
+	
 	void Robot::AutonomousPeriodic() {
 		PrintInfoToSmartDashboard();
+		autonLEDs();
 		static const bool hasReachedDestination = true;
 		static bool hasShot = false;
 		static bool hasGathered = false;
@@ -286,6 +295,43 @@ public:
 		gatherer.setPIDEnabled(false);
 		gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 	}
+	
+	void Robot::runLEDs() {
+		DigitalOutput pin1(1), pin2(2), pin3(3);
+//		drive.isInHighGear()
+		if(gatherer.isRolling()){
+			pin1.Set(0);
+			pin2.Set(0);
+			pin3.Set(0);
+		}
+		else if(drive.isInHighGear() && !drive.isInReverse()){
+			pin1.Set(1);
+			pin2.Set(1);
+			pin3.Set(1);
+		}
+		else if(!drive.isInHighGear() && !drive.isInReverse()){
+			pin1.Set(1);
+			pin2.Set(1);
+			pin3.Set(0);
+		}
+		else if(drive.isInReverse() && drive.isInHighGear()){
+			pin1.Set(1);
+			pin2.Set(0);
+			pin3.Set(1);
+		}
+		else if(drive.isInReverse()&& !drive.isInHighGear()){
+			pin1.Set(0);
+			pin2.Set(1);
+			pin3.Set(0);
+		}
+		else{
+			pin1.Set(0);
+			pin2.Set(1);
+			pin3.Set(1);
+			
+		}
+	}
+	
 	void Robot::TeleopPeriodic() {
 		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
 		static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;

@@ -66,3 +66,9 @@ bool DriveTrain::isTurning() {
 	//if encoders have opposite signs and
 	return leftEncoder->GetRate() * rightEncoder->GetRate() < 0 ;
 }
+bool DriveTrain::isInReverse() {
+	if (leftEncoder->GetRate() < 0 && rightEncoder->GetRate() < 0){
+		return true;
+	}
+	return false;
+}

@@ -33,5 +33,6 @@ public:
 	void takeSpeedSample();
 	void shiftAutomatically();
 	bool isTurning();
+	bool isInReverse();
 };
 #endif

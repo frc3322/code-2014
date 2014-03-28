@@ -37,3 +37,11 @@ bool Gatherer::isPIDEnabled() {
 void Gatherer::togglePIDEnabled() {
 	setPIDEnabled(!pidEnabled);
 }
+bool Gatherer::isRolling() {
+	if((roller->Get() > .5) || (roller->Get() < -.5)){
+		return true;
+	}
+	else {
+		return false;
+	}
+}
