@@ -23,7 +23,7 @@ class Robot : public IterativeRobot
 	Encoder leftEncoder, rightEncoder;
 	TripleSpeedController left, right;
 	DriveTrain drive;
-	Joystick stick;	//both are xbox controllers
+	Joystick driver;	//both are xbox controllers
 	Joystick tech;
 	AnalogChannel gathererPot;
 	AnalogChannel shooterPot;
@@ -48,8 +48,8 @@ class Robot : public IterativeRobot
 	double timeDrawnBack;
 	double timeOfStart;
 	double timeReachedDestination;
-	bool TECH_BACK_PREVIOUS, TECH_BACK_CURRENT, TECH_YBUTTON_PREVIOUS, TECH_YBUTTON_CURRENT;
-	bool TECH_XBUTTON_PREVIOUS, TECH_XBUTTON_CURRENT;
+	bool TECH_RIGHTBUMPER_PREVIOUS, TECH_RIGHTBUMPER_CURRENT, TECH_START_PREVIOUS, TECH_START_CURRENT;
+	bool TECH_LEFTBUMPER_PREVIOUS, TECH_LEFTBUMPER_CURRENT;
 
 public:
 	Robot():
@@ -68,7 +68,7 @@ public:
 #endif
 		left(&left1, &left2, &left3),right(&right1, &right2, &right3),
 		drive(&left,&right,&gearShifter,&leftEncoder,&rightEncoder),
-		stick(1),tech(2),
+		driver(1),tech(2),
 		gathererPot(2), shooterPot(1),
 		armController(-1.0,0.0,0.0,&gathererPot,&arm), //should get PID values from smartdashboard for the purpose of testing
 		gatherer(&roller,&gathererPot,&armController),
@@ -288,64 +288,68 @@ public:
 		timeOfLastShot = Timer::GetPPCTimestamp();
 		gatherer.setPIDEnabled(false);
 		gatherer.setArmAngle(gatherer.FORWARD_POSITION);
-		TECH_BACK_PREVIOUS = false;
-		TECH_YBUTTON_PREVIOUS = false;
-		TECH_XBUTTON_PREVIOUS = false;
+		TECH_RIGHTBUMPER_PREVIOUS = false;
+		TECH_START_PREVIOUS = false;
+		TECH_LEFTBUMPER_PREVIOUS = false;
 		compressor.Start();
 		shooter.shooterInit();
 	}
 	void Robot::TeleopPeriodic() {
-//		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;
-//		static bool TECH_YBUTTON_PREVIOUS = false, TECH_YBUTTON_CURRENT;
-//		static bool TECH_XBUTTON_PREVIOUS = false, TECH_XBUTTON_CURRENT;
-		
+
 		drive.takeSpeedSample();
 		drive.shiftAutomatically();
-		float moveValue = stick.GetAxis(Joystick::kYAxis);
-		float rotateValue = stick.GetAxis(Joystick::kTwistAxis);
-		TECH_BACK_CURRENT = tech.GetRawButton(XBOX::BACK);
-		if(TECH_BACK_CURRENT && !TECH_BACK_PREVIOUS) {
-			shooter.toggleAutoLoad();
-		}
-		TECH_BACK_PREVIOUS = TECH_BACK_CURRENT;
-		//deadband for joystick
+		
+		float moveValue = driver.GetAxis(Joystick::kYAxis);
 		if(fabs(moveValue) < deadbandWidth)moveValue = 0.0;
+		float rotateValue = driver.GetAxis(Joystick::kTwistAxis);
 		if(fabs(rotateValue) < deadbandWidth)rotateValue = 0.0;
 		//drive code
 		drive.ArcadeDrive(moveValue,rotateValue);
+		
+		
+		TECH_RIGHTBUMPER_CURRENT = tech.GetRawButton(XBOX::RBUMPER);
+		if(TECH_RIGHTBUMPER_CURRENT && !TECH_RIGHTBUMPER_PREVIOUS) {
+			shooter.toggleAutoLoad();
+		}
+		TECH_RIGHTBUMPER_PREVIOUS = TECH_RIGHTBUMPER_CURRENT;
+
+
 		//run roller
-		if(stick.GetRawButton(XBOX::RBUMPER)||tech.GetRawButton(XBOX::RBUMPER))
+		if(driver.GetRawButton(XBOX::RBUMPER) || tech.GetRawAxis(Joystick::kDefaultYAxis) > .8 )
 			gatherer.rollerControl(1);
-		else if (stick.GetRawButton(XBOX::LBUMPER)||tech.GetRawButton(XBOX::LBUMPER)) //run roller backward
+		else if (driver.GetRawButton(XBOX::LBUMPER) || tech.GetRawAxis(Joystick::kDefaultYAxis) < -.8 ) //run roller backward
 			gatherer.rollerControl(-1);
 		else
 			gatherer.rollerControl(0);
+		
 		//catapault
 		float secondsSinceLastShot = Timer::GetPPCTimestamp() - timeOfLastShot;
-		if(stick.GetRawAxis(Joystick::kTwistAxis) < -0.8) { //right trigger = shoot
+		if(driver.GetRawAxis(Joystick::kTwistAxis) < -0.8) { //right trigger = shoot
 			shooter.stopWinch();
 			shooter.releaseWinch();
 			timeOfLastShot = Timer::GetPPCTimestamp();
 		}
-		else if((shooter.autoLoad && !shooter.isDrawnBack()) || (stick.GetRawAxis(Joystick::kTwistAxis) > 0.8 && secondsSinceLastShot > 0.5)) {//left trigger
+		else if((shooter.autoLoad && !shooter.isDrawnBack()) || (driver.GetRawButton(XBOX::BACK) && secondsSinceLastShot > 0.5)) {//left trigger
 			if(!shooter.isWinchEngaged())
 				shooter.engageWinch();
 			shooter.runWinch();
 		}else {
 			shooter.stopWinch();
 		}
+		
+		
 		float gatherControl = tech.GetRawAxis(Joystick::kTwistAxis);
 		if(fabs(gatherControl) > 0.03) {
 			//should pid control be disabled? or should setpoint be updated
 			arm.Set(gatherControl * 0.5); //Manual Gatherer control
 		} else if(gatherer.isPIDEnabled()){
-			if(stick.GetRawButton(XBOX::BBUTTON)) {
+			if(driver.GetRawButton(XBOX::BBUTTON) || (tech.GetRawButton(XBOX::BBUTTON)) ) {
 				gatherer.setArmAngle(gatherer.FORWARD_POSITION);
-			} else if(stick.GetRawButton(XBOX::ABUTTON)) {
+			} else if(driver.GetRawButton(XBOX::ABUTTON) || (tech.GetRawButton(XBOX::ABUTTON))) {
 				gatherer.setArmAngle(gatherer.DOWN_POSITION);			
-			} else if(stick.GetRawButton(XBOX::YBUTTON)) {
+			}else if(driver.GetRawButton(XBOX::YBUTTON) || (tech.GetRawButton(XBOX::YBUTTON))) {
 				gatherer.setArmAngle(gatherer.UP_POSITION);			
-			} else if(stick.GetRawButton(XBOX::XBUTTON)) {
+			} else if(driver.GetRawButton(XBOX::XBUTTON) || (tech.GetRawButton(XBOX::XBUTTON))) {
 				gatherer.setArmAngle(gatherer.BACKWARD_POSITION);
 			}
 		} else {
@@ -353,24 +357,24 @@ public:
 		}
 		//zeroing gatherer potentiometer values
 		//would be good to only do this if PID is enabled
-		if(tech.GetRawButton(XBOX::BBUTTON)) {
+		if(tech.GetRawButton(XBOX::BACK)) {
 			gatherer.setDownPosition(gathererPot.GetVoltage());
 		}
 
 		//disabling PID gatherer control
-		TECH_YBUTTON_CURRENT = tech.GetRawButton(XBOX::YBUTTON);
-		if(TECH_YBUTTON_CURRENT && !TECH_YBUTTON_PREVIOUS) {
+		TECH_START_CURRENT = tech.GetRawButton(XBOX::START);
+		if(TECH_START_CURRENT && !TECH_START_PREVIOUS) {
 			gatherer.togglePIDEnabled();
 			//we could set a default position
 		}
-		TECH_YBUTTON_PREVIOUS = TECH_YBUTTON_CURRENT;
+		TECH_START_PREVIOUS = TECH_START_CURRENT;
 
 		//toggle autoshift enable
-		TECH_XBUTTON_CURRENT = tech.GetRawButton(XBOX::XBUTTON);
-		if(TECH_XBUTTON_CURRENT && !TECH_XBUTTON_PREVIOUS) {
+		TECH_LEFTBUMPER_CURRENT = tech.GetRawButton(XBOX::LBUMPER);
+		if(TECH_LEFTBUMPER_CURRENT && !TECH_LEFTBUMPER_PREVIOUS) {
 			drive.toogleAutoShiftEnable();
 		}
-		TECH_XBUTTON_PREVIOUS = TECH_XBUTTON_CURRENT;
+		TECH_LEFTBUMPER_PREVIOUS = TECH_LEFTBUMPER_CURRENT;
 		PrintInfoToSmartDashboard();
 	}
 };
