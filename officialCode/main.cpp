@@ -15,7 +15,6 @@ double floor(double a, double f) {
 }
 class Robot : public IterativeRobot
 {
-	
 	Talon left1, left2, left3, right1, right2, right3;
 	Talon winch;
 	Talon arm, roller;
@@ -222,7 +221,7 @@ public:
 			gatherer.setArmAngle(gatherer.FORWARD_POSITION);
 			hasGoneForward = driveForward(autonDistance,autonSpeed, autonStartTime + autonDriveTimeout);
 		}
-		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.25) {
+		else if(!hasShot || Timer::GetPPCTimestamp() < timeOfShot + 0.4) {
 			shooter.releaseWinch();
 			if(!hasShot) {
 				hasShot = true;
@@ -293,7 +292,7 @@ public:
 		TECH_YBUTTON_PREVIOUS = false;
 		TECH_XBUTTON_PREVIOUS = false;
 		compressor.Start();
-		shooter.autoLoad = true;
+		shooter.shooterInit();
 	}
 	void Robot::TeleopPeriodic() {
 //		static bool TECH_BACK_PREVIOUS = false, TECH_BACK_CURRENT;

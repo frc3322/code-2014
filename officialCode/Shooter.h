@@ -14,6 +14,7 @@ public:
 	double highThreshold;
 	double lowThreshold;
 	Shooter(SpeedController* winch, AnalogChannel* shooterPot, DoubleSolenoid * trigger);
+	void shooterInit();
 	void runWinch();
 	void stopWinch();
 	void releaseWinch();

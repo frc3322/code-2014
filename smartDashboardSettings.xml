@@ -150,17 +150,4 @@
 </dashboard>
 <live-window>
 </live-window>
-	<hidden field="PPC time"/>
-	<hidden field="left  encoder"/>
-	<hidden field="right encoder"/>
-	<hidden field="tech trigger axis"/>
-	<hidden field="shift counter threshold"/>
-	<hidden field="autonWinchTimeout"/>
-	<hidden field="shift low point"/>
-	<hidden field="shooter low threshold"/>
-	<hidden field="shooter pot"/>
-	<hidden field="joystick deadband"/>
-	<hidden field="zAxis"/>
-	<hidden field="shift high point"/>
-	<hidden field="Is auto shift enabled"/>
 </xml>

@@ -8,6 +8,10 @@ highThreshold(2.4), lowThreshold(1.0), SHOOT_POSITION(1.5), autoLoad(true)
 {
 	trigger->Set(DoubleSolenoid::kForward);
 }
+void Shooter::shooterInit() {
+	_isDrawnBack = false;
+	autoLoad = true;
+}
 void Shooter::runWinch() {
 #if ROBOT == COMP
 	winch->Set(-1);
