@@ -4,7 +4,6 @@
 #include "DriveTrain.h"
 #include "Gatherer.h"
 #include "TripleSpeedController.h"
-#include "Shooter.h"
 #include "constants.h"
 
 double ceiling(double a, double c) {
