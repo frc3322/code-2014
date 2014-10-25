@@ -6,7 +6,7 @@ DriveTrain::DriveTrain(SpeedController *left, SpeedController *right,
 				shifter(gearShifter),
 				leftEncoder(leftDriveEncoder), rightEncoder(rightDriveEncoder),
 				sampleIndex(0), shiftPoint(60.0), autoShiftEnabled(true),
-				shiftHighPoint(4000.0), shiftLowPoint(3500.0),
+				shiftHighPoint(3000.0), shiftLowPoint(2000.0),
 				shiftHighCounter(0),shiftLowCounter(0), shiftCounterThreshold(3)
 {
 	for(unsigned int i = 0; i < NUM_SPEED_SAMPLES; i++){
