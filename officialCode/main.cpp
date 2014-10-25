@@ -2,7 +2,6 @@
 #include "../xbox.h"
 #include "SmartDashboard/SmartDashboard.h"
 #include "DriveTrain.h"
-#include "Gatherer.h"
 #include "TripleSpeedController.h"
 #include "constants.h"
 
